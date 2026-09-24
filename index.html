@@ -205,7 +205,8 @@ footer a{color:var(--dim)}
   <p>アバターのファイルには手を加えません。prefab を1つ入れるだけで、アップロード時のビルドでのみ組み込まれます。外すときは prefab を消すだけです。</p>
   <div class="note calm">
     <span class="label">仕組み</span>
-    <p>新しい色を作ってはいません。出てくる色はすべて元の写真にあった色で、<strong>どこから取ってくるか</strong>をずらしているだけです。壊れているのに写真から浮かないのはそのためです。</p>
+    <p>VirtualLens2 が持っているピント情報（被写界深度の計算結果）をそのまま受け取り、<strong>ボケていると判定された画素にだけグリッチをかけています。</strong>どこが壊れるかを決めているのは構図ではなく、そのときのピントです。</p>
+    <p>色を足したり、別の画像を重ねたりはしていません。<strong>撮影中の映像そのものに、リアルタイムで処理が入ります。</strong>あとから加工しているのではなく、シャッターを切った時点ですでに壊れた状態で写ります。</p>
   </div>
 </section>
 
@@ -257,6 +258,14 @@ footer a{color:var(--dim)}
   <div class="note">
     <span class="label">ここが最初のつまずきどころ</span>
     <p><strong>点けるまで写真は何も変わりません。</strong>4つとも消灯している状態が「効果オフ」です。ON/OFF のボタンはありません。</p>
+  </div>
+
+  <h3>VirtualLens2 のモニターには映りません</h3>
+  <div class="note">
+    <span class="label">撮り方のコツ</span>
+    <p><strong>効果が乗るのは VRChat 標準のカメラ（デフォルトカメラ）の側です。VirtualLens2 のモニターには出ません。</strong></p>
+    <p>そのため、<strong>構図とピントは VirtualLens2 のモニターで合わせ、崩れ方はデフォルトカメラのプレビューで確認する</strong>という撮り方になります。2つを見比べながら追い込んでください。</p>
+    <p>モニターに出ていないからといって効いていないわけではありません。撮れた写真には入っています。</p>
   </div>
 
   <h3>効果は Unity 内では見えません</h3>
@@ -385,6 +394,7 @@ footer a{color:var(--dim)}
     <li>F 値が高すぎて、画面全体にピントが合っている</li>
     <li>F 値が最大まで上がっていて、ボケ自体が無効になっている</li>
     <li>Unity 内で見ている（Unity では見えません）</li>
+    <li><strong>VirtualLens2 のモニターを見ている</strong>（モニターには映りません。デフォルトカメラ側で確認してください）</li>
   </ul>
 
   <h3>メニューには出るのに効果が出ない</h3>
@@ -436,6 +446,7 @@ footer a{color:var(--dim)}
     <li><strong>VirtualLens2 が <code class="path">Assets/VirtualLens2/</code> にある必要があります</strong></li>
     <li><strong>1つのアバターに1つだけ</strong>入れてください</li>
     <li>効果は写真とストリーミングカメラにだけ出ます。自分の視界・ミラー・他の人からの見え方は変わりません</li>
+    <li><strong>VirtualLens2 のモニターには映りません。</strong>崩れ方の確認はデフォルトカメラのプレビューでおこなってください</li>
   </ul>
   <div class="note calm">
     <span class="label">同期コストについて</span>
@@ -531,6 +542,11 @@ footer a{color:var(--dim)}
   <h3>VirtualLens2 について</h3>
   <p>本ツールは VirtualLens2（ろじらぼ様）を前提としています。ご利用にあたっては、<a href="https://vlens2.logilabo.dev/ja/docs/readme/" target="_blank" rel="noopener">VirtualLens2 の利用規約</a>もあわせてお守りください。</p>
   <p><strong>本ツールには VirtualLens2 のファイルは一切含まれていません。</strong>VirtualLens2 は別途ご購入・ご用意ください。</p>
+  <div class="note">
+    <span class="label">配布について</span>
+    <p><strong>本ツールの配布にあたっては、VirtualLens2 の作者であるろじらぼ様に事前にご相談し、許可をいただいています。</strong></p>
+    <p>素晴らしいツールを公開してくださっていることに、あらためて感謝申し上げます。</p>
+  </div>
 
   <div class="note calm">
     <span class="label">同梱ファイルとの関係</span>
