@@ -1,0 +1,9 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+*.Zone.Identifier
+*~
+*.bak
+*.swp
+.vscode/
+.idea/

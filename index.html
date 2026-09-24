@@ -96,7 +96,8 @@ p{margin:0 0 15px}
 ul,ol.steps{margin:0 0 15px;padding-left:1.3em}
 li{margin:0 0 7px}
 code{font-family:var(--mono);font-size:.88em;background:#1c1c22;padding:2px 6px;border-radius:4px;color:#ffd3de}
-.path{white-space:nowrap}
+/* long asset paths must wrap on a phone rather than pushing the page sideways */
+.path{overflow-wrap:anywhere;word-break:break-word}
 
 /* callouts */
 .note{
@@ -218,13 +219,19 @@ footer a{color:var(--dim)}
     <li><strong>PC 版 VRChat</strong>（Quest 単体では効果は出ません）</li>
   </ul>
 
-  <h3>動作確認をおこなったバージョン</h3>
+  <h3>開発・確認に使ったバージョン</h3>
   <ul>
     <li>VirtualLens2 2.12.4</li>
     <li>Modular Avatar 1.18.7</li>
     <li>Unity 2022.3.22f1</li>
   </ul>
-  <p>VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動きます。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まります</strong>ので、壊れた状態のアバターが出来上がることはありません。その場合はご連絡ください。</p>
+  <div class="note">
+    <span class="label">確認できている範囲</span>
+    <p>Unity 上でのビルドと、シェーダーの描画テストまでを確認しています。
+      <strong>VRChat 実機での最終確認は進行中です。</strong>
+      気づいた点があれば<a href="#contact">ご連絡ください</a>。助かります。</p>
+  </div>
+  <p>VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動きます。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まる設計</strong>です。その場合はご連絡ください。</p>
   <p>VirtualLens2 の解像度設定（1080p / 1440p / 2160p / 4320p）はどれでも構いません。崩れる範囲は、その解像度で実際に出るボケの量に合わせて判定します。</p>
 </section>
 
