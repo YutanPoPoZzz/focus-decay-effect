@@ -2,7 +2,7 @@
 
 VRChat アバター向けギミック **Focus Decay Effect** の説明書です。
 
-**📖 説明書はこちら → https://yutanpopozzz.github.io/focus-decay-effect/**
+**📖 説明書はこちら → https://yutanpopozzz.com/focus-decay-effect/**
 
 ---
 
