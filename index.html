@@ -163,7 +163,7 @@ footer a{color:var(--dim)}
     <p class="lede">VirtualLens2 で撮った写真の、<strong>ピントが合っていないところだけ</strong>を壊します。
       被写体はそのまま、ボケているところほど強く崩れます。</p>
     <div class="badges">
-      <span class="badge now">v0.9.3</span>
+      <span class="badge now">v0.9.4</span>
       <span class="badge">非破壊 / NDMF</span>
       <span class="badge">同期コスト 0 bit</span>
       <span class="badge">PC 専用</span>
@@ -181,7 +181,7 @@ footer a{color:var(--dim)}
     <li><a href="#require">必要なもの</a></li>
     <li><a href="#install">導入のしかた</a></li>
     <li><a href="#menu">メニューの場所</a></li>
-    <li><a href="#effects">エフェクト4種</a></li>
+    <li><a href="#effects">エフェクト6種</a></li>
     <li><a href="#adjust">Adjust — 崩れ方</a></li>
     <li><a href="#colour">Colour — 色</a></li>
     <li><a href="#presets">Presets と Reset</a></li>
@@ -201,7 +201,7 @@ footer a{color:var(--dim)}
 <section id="about">
   <h2 class="sec"><span class="num">01</span>これは何か</h2>
   <p>VirtualLens2 で写真を撮ると、被写界深度（ボケ）がかかります。このギミックは、<strong>そのボケている範囲だけ</strong>を崩します。ピントが合っている被写体には一切かかりません。</p>
-  <p>崩し方は4種類。細く伸びる、タイル状に割れる、真下に垂れる、横に流れる。強さや粗さは12個のダイヤルで調整できます。</p>
+  <p>崩し方は6種類。細く伸びる、タイル状に割れる、真下に垂れる、横に流れる、水に溶ける絵の具のようににじむ、長方形に切り刻まれる。強さや粗さは12個のダイヤルで調整できます。</p>
   <p>アバターのファイルには手を加えません。prefab を1つ入れるだけで、アップロード時のビルドでのみ組み込まれます。外すときは prefab を消すだけです。</p>
   <div class="note calm">
     <span class="label">仕組み</span>
@@ -254,10 +254,11 @@ footer a{color:var(--dim)}
   <p>VirtualLens2 側で特別な設定をしていただく必要はありません。</p>
 
   <h3>② VRChat の中で</h3>
-  <p>アバターのメニューから <code>VirtualLens2 ▸ Effects ▸ Focus Decay</code> を開き、<strong>Smear / Blocks / Drip Down / Drip Across のどれか1つを点けてください。</strong></p>
+  <p>アバターのメニューから <code>VirtualLens2 ▸ Effects ▸ Focus Decay ▸ Effect</code> を開き、<strong>6種類のうちどれか1つを点けてください。</strong></p>
+  <p>エフェクトの一覧は <code>Effect</code> の中です。<code>Focus Decay</code> を開いただけでは、そこにモード名は出てきません。</p>
   <div class="note">
     <span class="label">ここが最初のつまずきどころ</span>
-    <p><strong>点けるまで写真は何も変わりません。</strong>4つとも消灯している状態が「効果オフ」です。ON/OFF のボタンはありません。</p>
+    <p><strong>点けるまで写真は何も変わりません。</strong>6つとも消灯している状態が「効果オフ」です。ON/OFF のボタンはありません（点いているものをもう一度押せば消えます）。</p>
   </div>
 
   <h3>VirtualLens2 のモニターには映りません</h3>
@@ -283,12 +284,11 @@ footer a{color:var(--dim)}
   <p>VirtualLens2 のメニューの中に入ります。カメラの設定と並ぶ位置です。</p>
 <pre class="tree"><b>VirtualLens2</b> ▸ <b>Effects</b> ▸ <b>Focus Decay</b>
  ├ Reset          <i>← 全部初期値に戻して効果オフ</i>
- ├ Smear
- ├ Blocks
- ├ Drip Down
- ├ Drip Across
- ├ Adjust  ▸      <i>崩れ方の調整（8項目）</i>
- ├ Colour  ▸      <i>色の調整（4項目）</i>
+ ├ Effect  ▸      <i>Smear / Blocks / Drip Down / Drip Across / Fluid / Glitch</i>
+ ├ Intensity      <i>← よく使うのでここに</i>
+ ├ Falloff        <i>←</i>
+ ├ Adjust  ▸      <i>Width / Length / Displace / Merge / Speed / Protect</i>
+ ├ Colour  ▸      <i>Chroma / Posterize / Prism / Bleed</i>
  └ Presets ▸      <i>Load ▸ Load 1-4 ／ Save ▸ Save 1-4</i></pre>
   <div class="note calm">
     <span class="label">見つからないとき</span>
@@ -297,47 +297,63 @@ footer a{color:var(--dim)}
 </section>
 
 <section id="effects">
-  <h2 class="sec"><span class="num">05</span>エフェクト4種</h2>
-  <p>4つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</p>
+  <h2 class="sec"><span class="num">05</span>エフェクト6種</h2>
+  <p><code>Effect</code> の中にあります。6つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</p>
   <dl class="dials">
     <dt>Smear</dt>
-    <dd>いろいろな向きに細く伸びます。4つの中で一番おとなしく、写真に馴染みます。</dd>
+    <dd>いろいろな向きに細く伸びます。6つの中で一番おとなしく、写真に馴染みます。</dd>
     <dt>Blocks</dt>
     <dd>タイル状に割れて、中身がずれます。格子が見えるのが持ち味です。<strong>Width で、細かいモザイクから大きなタイルまで変わります。</strong></dd>
     <dt>Drip Down</dt>
     <dd>細い列が真下に垂れます。裂け目は画面全体に散らばるので、どこが垂れるかはピントが決めます。</dd>
     <dt>Drip Across</dt>
     <dd>同じものが横に流れます。</dd>
+    <dt>Fluid</dt>
+    <dd>水に溶ける絵の具のように、色がにじんで広がります。<strong>Displace がマーブル感のつまみです。</strong>上げるほど輪郭が曲がって渦を巻き、下げるほど穏やかなにじみになります。
+      <strong>0 にすると渦が完全に止まり、ボケに近い見え方になります</strong>ので、「効いていない」と感じたら 0.3〜0.5 から試してください。
+      色は Chroma が作ります。<strong>Chroma を 0 にすると灰色のにじみ</strong>になります。</dd>
+    <dt>Glitch</dt>
+    <dd>ランダムな大きさの長方形に切り取られてズレ、色が分離します。格子にならないよう、帯の高さも列の幅もばらついています。切り口はぼかしていません。
+      主に横へ飛びますが、ときどき縦にも飛びます。<strong>切り口を最も鋭くしたいときは Merge を 0 に</strong>してください。</dd>
   </dl>
 </section>
 
 <section id="adjust">
-  <h2 class="sec"><span class="num">06</span>Adjust — 崩れ方</h2>
+  <h2 class="sec"><span class="num">06</span>ダイヤル — 崩れ方</h2>
+
+  <h3>root にある2つ</h3>
   <dl class="dials">
     <dt>Intensity</dt>
     <dd>効果の強さ。<br>
-      <strong>Drip Down / Drip Across では意味が変わり、「垂れる列の本数」になります。</strong>下げると薄くなるのではなく、本数が減って歯抜けになります。</dd>
+      <strong>Drip Down / Drip Across / Glitch では意味が変わり、「壊れる数」になります。</strong>下げると薄くなるのではなく、垂れる列や飛ぶ長方形の数が減って歯抜けになります。</dd>
 
+    <dt>Falloff</dt>
+    <dd>どのくらいボケたら最大まで壊すか。<strong>下げるほど、浅いボケでも壊れます。</strong>
+      <strong>初期値はダイヤルのかなり左寄り</strong>です。右に回すほど「深いボケしか壊さない」状態に近づき、行きすぎると何も起きなくなります。</dd>
+  </dl>
+
+  <h3>Adjust の6つ</h3>
+  <dl class="dials">
     <dt>Width</dt>
-    <dd>崩れの大きさ。<strong>Blocks では 0 で細かいモザイク、1 で大きなタイル。</strong>Drip では垂れる列の太さ、Smear では筋の太さです。</dd>
+    <dd>崩れの大きさ。<strong>Blocks</strong> では 0 で細かいモザイク、1 で大きなタイル。<strong>Glitch</strong> では切り取る長方形の大きさ。<strong>Fluid</strong> ではにじみの塊の大きさ。Drip では垂れる列の太さ、Smear では筋の太さです。</dd>
 
     <dt>Length</dt>
-    <dd>崩れの長さ。走りの長さ、垂れの長さです。</dd>
+    <dd>崩れの長さ。走りの長さ、垂れの長さ。<strong>Fluid ではにじみが届く距離</strong>、<strong>Glitch では長方形が飛ぶ距離</strong>です。</dd>
 
     <dt>Displace</dt>
-    <dd>画素をどれだけ引きずるか。<strong>初期値の中央が標準</strong>で、右に回すと最大2倍まで伸びます。0 にすると絵は動かず、色の変化だけが残ります。</dd>
+    <dd>画素をどれだけ引きずるか。<strong>初期値の中央が標準</strong>で、右に回すと最大2倍まで伸びます。0 にすると絵は動かず、色の変化だけが残ります。<br>
+      <strong>Fluid だけ意味が変わり、マーブル感になります。</strong>0 で小さく穏やかなにじみ、1 で大きく渦を巻いたにじみ。にじみの広さも一緒に動きます。</dd>
 
     <dt>Merge</dt>
-    <dd>隣の崩れと引っ張り合って、<strong>崩れていない隙間を埋めます。</strong>上げるほど効果が広がります。</dd>
+    <dd>隣の崩れと引っ張り合って、<strong>崩れていない隙間を埋めます。</strong>上げるほど効果が広がります。
+      逆に<strong>Glitch の切り口を鋭く保ちたいときは 0 に</strong>してください。</dd>
 
     <dt>Speed</dt>
     <dd>崩れ方を1秒に何回抽選し直すか。<strong>0 にすると止まり、同じ構図なら何枚撮っても同じ絵になります。</strong>写真の中で何かが動くダイヤルではありません。追い込んだ1枚を撮り直したいときは 0 にしてください。</dd>
 
-    <dt>Falloff</dt>
-    <dd>どのくらいボケたら最大まで壊すか。<strong>下げるほど、浅いボケでも壊れます。</strong></dd>
-
     <dt>Protect</dt>
-    <dd><strong>被写体が背景へコピーされるのを防ぎます。</strong>初期値は 0（＝防がない）で、被写体が引きずられて伸びます。<strong>像が二重に見えるのが気になるときは上げてください。</strong>被写体そのものは、どの値でも壊れません。</dd>
+    <dd><strong>被写体が背景へコピーされるのを防ぎます。</strong>初期値は 0（＝防がない）で、被写体が引きずられて伸びます。<strong>像が二重に見えるのが気になるときは上げてください。</strong>被写体そのものは、どの値でも壊れません。<br>
+      <strong>Fluid ではほとんど効きません。</strong>周囲から広く色を集める仕組みのため、1点を見る判定では止められません。</dd>
   </dl>
 </section>
 
@@ -345,7 +361,8 @@ footer a{color:var(--dim)}
   <h2 class="sec"><span class="num">07</span>Colour — 色</h2>
   <dl class="dials">
     <dt>Chroma</dt>
-    <dd>赤と青を、崩れた向きの前後から取ってくる量。<strong>輪郭のある場所ほど色がずれて見えます。</strong>ボケが深く平坦な場所では変化が小さく出ます。</dd>
+    <dd>赤と青を、崩れた向きの前後から取ってくる量。<strong>輪郭のある場所ほど色がずれて見えます。</strong>ボケが深く平坦な場所では変化が小さく出ます。<br>
+      <strong>Fluid では役割が違い、にじみの縁に出る色そのものを作ります。0 にすると灰色のにじみになります。</strong></dd>
 
     <dt>Posterize</dt>
     <dd>減色の強さ。</dd>
@@ -364,7 +381,8 @@ footer a{color:var(--dim)}
   <h3>Presets — 設定を4つまで保存</h3>
   <p><code>Save ▸ Save 1</code> で今の設定を保存し、<code>Load ▸ Load 1</code> で呼び出します。保存されるのは<strong>ダイヤル12本と、選んでいるエフェクトの種類</strong>です。</p>
   <p>Load と Save は別のメニューに分けてあります。撮影中に誤って上書きしないためです。</p>
-  <p>まだ保存していないスロットを Load すると、初期設定に戻ります。</p>
+  <p>まだ保存していないスロットを Load すると、ダイヤルは初期値に戻り、<strong>エフェクトは Smear が点いた状態</strong>になります。
+    完全に消したいときは <code>Reset</code> を使ってください。</p>
 
   <h3>Reset</h3>
   <p>ダイヤル12本を初期値に戻し、エフェクトをオフにします。ダイヤルは今の値が画面から読めないので、触りすぎて分からなくなったらここに戻ってきてください。</p>
@@ -390,7 +408,7 @@ footer a{color:var(--dim)}
 
   <h3>写真が何も変わらない</h3>
   <ul>
-    <li>エフェクトを選んでいない（4つとも消灯＝OFF です）</li>
+    <li>エフェクトを選んでいない（<code>Effect</code> の中の6つが全部消灯＝OFF です）</li>
     <li>F 値が高すぎて、画面全体にピントが合っている</li>
     <li>F 値が最大まで上がっていて、ボケ自体が無効になっている</li>
     <li>Unity 内で見ている（Unity では見えません）</li>
@@ -435,6 +453,14 @@ footer a{color:var(--dim)}
     <div class="body"><p>prefab が複数入っています。1つだけにしてください。</p></div>
   </details>
 
+  <details class="err"><summary>VirtualLens2 の深度テクスチャを受け取れませんでした</summary>
+    <div class="body"><p>VirtualLens2 の構成が想定と異なります。お使いの VirtualLens2 のバージョンと設定を添えてご連絡ください。</p></div>
+  </details>
+
+  <details class="err"><summary>VirtualLens2 が複数見つかりました</summary>
+    <div class="body"><p>プロジェクトに VirtualLens2 が2つ以上入っています。VCC で入れたものと手動で入れたものが二重になっているときによく出ます。警告に出ているパスのうち、使わない方を削除してください。</p></div>
+  </details>
+
   <details class="err"><summary>Modular Avatar の更新を求めるウィンドウが出る</summary>
     <div class="body"><p>Modular Avatar 1.18.0 以上が必要です。更新してください。</p></div>
   </details>
@@ -474,6 +500,26 @@ footer a{color:var(--dim)}
 
 <section id="changelog">
   <h2 class="sec"><span class="num">13</span>更新履歴</h2>
+
+  <div class="rel">
+    <h3>v0.9.4</h3>
+    <span class="when">2026-09-25</span>
+    <h4>追加</h4>
+    <ul>
+      <li><strong>Fluid</strong> — 水に溶ける絵の具のように、色がにじんで広がります。Displace がマーブル感のつまみです</li>
+      <li><strong>Glitch</strong> — ランダムな大きさの長方形に切り取られてズレ、色が分離します</li>
+    </ul>
+    <h4>変更</h4>
+    <ul>
+      <li><strong>エフェクト6種を <code>Effect</code> サブメニューに移しました。</strong>これまで <code>Focus Decay</code> を開いてすぐ並んでいたものが、1階層下がっています。<strong>パラメータ名は変えていないので、保存済みの設定とプリセットはそのまま引き継がれます</strong></li>
+      <li>空いた枠に <strong><code>Intensity</code> と <code>Falloff</code> を root へ昇格</strong>させました。よく使う2つが1タップ浅くなります</li>
+      <li><code>Adjust</code> は残りの6項目（Width / Length / Displace / Merge / Speed / Protect）になりました</li>
+    </ul>
+    <h4>修正</h4>
+    <ul>
+      <li>Glitch では Width が二重に掛かっていた（上限側で画面幅を超える板になっていました）</li>
+    </ul>
+  </div>
 
   <div class="rel">
     <h3>v0.9.3</h3>
