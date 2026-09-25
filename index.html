@@ -131,6 +131,25 @@ dl.dials dt::before{content:"";display:inline-block;width:6px;height:6px;backgro
 dl.dials dd{margin:0;color:var(--dim)}
 dl.dials dd strong{color:var(--fg);font-weight:600}
 
+/* tables: the mode grid is wider than a phone, so it scrolls inside its own box
+   rather than pushing the page sideways */
+.tbl{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:8px;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.6}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child th,tr:last-child td{border-bottom:none}
+thead th{
+  background:var(--panel);font-family:var(--mono);font-size:.76rem;letter-spacing:.06em;
+  color:var(--faint);font-weight:600;white-space:nowrap
+}
+tbody th{font-family:var(--mono);font-weight:700;color:var(--fg);white-space:nowrap}
+td{color:var(--dim);word-break:auto-phrase}
+td strong{color:var(--fg);font-weight:600}
+td.all{color:var(--faint)}
+table.modes{min-width:720px}
+table.modes td.odd{background:rgba(255,51,102,.07)}
+.tbl-hint{font-size:.82rem;color:var(--faint);margin:-12px 0 20px}
+@media(min-width:760px){.tbl-hint{display:none}}
+
 /* errors */
 .err{border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
 .err summary{
@@ -229,10 +248,10 @@ footer a{color:var(--dim)}
   <div class="note">
     <span class="label">確認できている範囲</span>
     <p>Unity 上でのビルドと、シェーダーの描画テストまでを確認しています。
-      <strong>VRChat 実機での最終確認は進行中です。</strong>
+      <strong>VRChat 実機での動作は、まだ確認できていません。</strong>
       気づいた点があれば<a href="#contact">ご連絡ください</a>。助かります。</p>
   </div>
-  <p>VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動きます。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まる設計</strong>です。その場合はご連絡ください。</p>
+  <p>VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動く見込みです。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まる設計</strong>です。その場合はご連絡ください。</p>
   <p>VirtualLens2 の解像度設定（1080p / 1440p / 2160p / 4320p）はどれでも構いません。崩れる範囲は、その解像度で実際に出るボケの量に合わせて判定します。</p>
 </section>
 
@@ -299,6 +318,19 @@ footer a{color:var(--dim)}
 <section id="effects">
   <h2 class="sec"><span class="num">05</span>エフェクト6種</h2>
   <p><code>Effect</code> の中にあります。6つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>エフェクト</th><th>崩れ方</th><th>性格が変わるダイヤル</th></tr></thead>
+      <tbody>
+        <tr><th>Smear</th><td>いろいろな向きに細く伸びる</td><td>—（6つの中で一番おとなしい）</td></tr>
+        <tr><th>Blocks</th><td>タイル状に割れて、中身がずれる</td><td><strong>Width</strong> ＝ タイルの大きさ</td></tr>
+        <tr><th>Drip Down</th><td>細い列が真下に垂れる</td><td><strong>Intensity</strong> ＝ 垂れる列の数</td></tr>
+        <tr><th>Drip Across</th><td>細い列が横に流れる</td><td><strong>Intensity</strong> ＝ 流れる列の数</td></tr>
+        <tr><th>Fluid</th><td>水に溶ける絵の具のように、色がにじんで広がる</td><td><strong>Displace</strong> ＝ 溶け具合（マーブル感）<br><strong>Chroma</strong> ＝ にじみの色</td></tr>
+        <tr><th>Glitch</th><td>ランダムな長方形に切り取られてズレ、色が分離する</td><td><strong>Intensity</strong> ＝ 切り取られる数<br><strong>Merge</strong> 0 で切り口が最も鋭い</td></tr>
+      </tbody>
+    </table>
+  </div>
   <dl class="dials">
     <dt>Smear</dt>
     <dd>いろいろな向きに細く伸びます。6つの中で一番おとなしく、写真に馴染みます。</dd>
@@ -320,6 +352,33 @@ footer a{color:var(--dim)}
 
 <section id="adjust">
   <h2 class="sec"><span class="num">06</span>ダイヤル — 崩れ方</h2>
+
+  <h3>どのダイヤルがどのモードに効くか</h3>
+  <p>色のついたマスが、<strong>そのモードで意味が変わるもの</strong>です。</p>
+  <div class="tbl">
+    <table class="modes">
+      <thead><tr><th></th><th>Smear</th><th>Blocks</th><th>Drip Down / Across</th><th>Glitch</th><th>Fluid</th></tr></thead>
+      <tbody>
+        <tr><th>Intensity</th><td>崩れる量</td><td>崩れる量</td><td class="odd"><strong>垂れる列の数</strong></td><td class="odd"><strong>切り取られる数</strong></td><td>崩れる量</td></tr>
+        <tr><th>Falloff</th><td class="all" colspan="5">どのくらいボケたら最大まで壊すか（全モード共通）</td></tr>
+        <tr><th>Width</th><td>筋の太さ</td><td class="odd"><strong>タイルの大きさ</strong></td><td>列の太さ</td><td>長方形の大きさ</td><td>にじみの塊の大きさ</td></tr>
+        <tr><th>Length</th><td>筋の長さ</td><td>引きずる距離</td><td>垂れの長さ</td><td>長方形が飛ぶ距離</td><td>にじみが届く距離</td></tr>
+        <tr><th>Displace</th><td colspan="4">画素をずらす距離</td><td class="odd"><strong>溶け具合（マーブル感）</strong></td></tr>
+        <tr><th>Merge</th><td class="all" colspan="5">隣の崩れと引っ張り合って隙間を埋める（全モード共通）</td></tr>
+        <tr><th>Speed</th><td class="all" colspan="5">崩れ方を1秒に何回抽選し直すか（全モード共通）</td></tr>
+        <tr><th>Protect</th><td colspan="4">被写体が背景へコピーされるのを防ぐ</td><td class="odd"><strong>ほとんど効かない</strong></td></tr>
+        <tr><th>Chroma</th><td colspan="4">輪郭の赤と青をずらす</td><td class="odd"><strong>にじみの縁の色そのもの</strong></td></tr>
+        <tr><th>Posterize<br>Prism<br>Bleed</th><td class="all" colspan="5">色の仕上げ（全モード共通）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tbl-hint">表は横にスクロールできます。</p>
+
+  <div class="note">
+    <span class="label">Fluid の Displace は意味が違います</span>
+    <p>ほかのモードの Displace は「画素をずらす距離」ですが、<strong>Fluid では「溶け具合」</strong>です。上げるほど輪郭が曲がって渦を巻き、マーブル模様になります。</p>
+    <p><strong>マーブル感を抑えたいときは、Displace を下げてください。</strong>渦が収まって、素直なにじみに近づきます。0 まで下げると渦が完全に止まり、ボケに近い見え方になります。</p>
+  </div>
 
   <h3>root にある2つ</h3>
   <dl class="dials">
