@@ -163,7 +163,7 @@ footer a{color:var(--dim)}
     <p class="lede">VirtualLens2 で撮った写真の、<strong>ピントが合っていないところだけ</strong>を壊します。
       被写体はそのまま、ボケているところほど強く崩れます。</p>
     <div class="badges">
-      <span class="badge now">v0.9.2</span>
+      <span class="badge now">v0.9.3</span>
       <span class="badge">非破壊 / NDMF</span>
       <span class="badge">同期コスト 0 bit</span>
       <span class="badge">PC 専用</span>
@@ -241,8 +241,8 @@ footer a{color:var(--dim)}
 
   <div class="note">
     <span class="label">順番があります</span>
-    <p><strong>VirtualLens2 を先に入れてください。</strong>順番が逆だとシェーダーがエラーになります。<br>
-    また、VirtualLens2 は <code class="path">Assets/VirtualLens2/</code> に置いてください。移動していると動きません。</p>
+    <p><strong>VirtualLens2 を先に入れてください。</strong>順番が逆だとシェーダーがエラーになります。</p>
+    <p>置き場所はどこでも構いません。<code class="path">Assets/</code> の下であれば、フォルダ整理で何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です。</p>
   </div>
 
   <h3>① Unity で</h3>
@@ -406,7 +406,9 @@ footer a{color:var(--dim)}
   <p>ビルド時に出るエラーです。クリックすると対処が開きます。</p>
 
   <details class="err"><summary>シェーダーが見つからないか、コンパイルに失敗しています</summary>
-    <div class="body"><p>VirtualLens2 が入っていないか、<code class="path">Assets/VirtualLens2/</code> 以外の場所にあります。先に導入するか、フォルダを元の位置に戻してください。VirtualLens2 を後から入れた場合もこのエラーになります。直せない場合は <code class="path">Assets/FocusDecayEffect</code> を削除すれば元に戻ります。</p></div>
+    <div class="body"><p>VirtualLens2 がこのプロジェクトに入っていません。先に導入してください。</p>
+      <p>入っているのにこのエラーが出る場合は、<strong>メニューの <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code></strong> を実行してください。VirtualLens2 を探し直して、シェーダーの参照先を合わせます。</p>
+      <p>直せない場合は <code class="path">Assets/FocusDecayEffect</code> を削除すれば元に戻ります。</p></div>
   </details>
 
   <details class="err"><summary>このアバターに VirtualLens2 がセットアップされていません</summary>
@@ -443,7 +445,7 @@ footer a{color:var(--dim)}
   <ul>
     <li><strong>PC 専用です。</strong>Quest / iOS 向けのビルドでは、prefab を入れたまま自動的に無効になります</li>
     <li><strong>VirtualLens2 の非破壊モード専用です</strong></li>
-    <li><strong>VirtualLens2 が <code class="path">Assets/VirtualLens2/</code> にある必要があります</strong></li>
+    <li>VirtualLens2 の置き場所は自由です（<code class="path">Assets/</code> の下であればネストしていても追従します）</li>
     <li><strong>1つのアバターに1つだけ</strong>入れてください</li>
     <li>効果は写真とストリーミングカメラにだけ出ます。自分の視界・ミラー・他の人からの見え方は変わりません</li>
     <li><strong>VirtualLens2 のモニターには映りません。</strong>崩れ方の確認はデフォルトカメラのプレビューでおこなってください</li>
@@ -472,6 +474,16 @@ footer a{color:var(--dim)}
 
 <section id="changelog">
   <h2 class="sec"><span class="num">13</span>更新履歴</h2>
+
+  <div class="rel">
+    <h3>v0.9.3</h3>
+    <span class="when">2026-09-25</span>
+    <h4>変更</h4>
+    <ul>
+      <li><strong>VirtualLens2 の置き場所が自由になりました。</strong>これまでは <code class="path">Assets/VirtualLens2/</code> に置く必要がありましたが、<code class="path">Assets/</code> の下であれば何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です</li>
+      <li>うまく見つからないときのために <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> を追加しました</li>
+    </ul>
+  </div>
 
   <div class="rel">
     <h3>v0.9.2</h3>
