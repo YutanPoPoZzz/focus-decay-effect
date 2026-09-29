@@ -21,6 +21,8 @@ html{scroll-behavior:smooth;scroll-padding-top:1.5rem}
 body{
   margin:0;background:var(--bg);color:var(--fg);
   font-family:var(--sans);font-size:16px;line-height:1.85;
+  /* phrase-aware Japanese breaking is switched on per language below */
+  word-break:normal;
   -webkit-font-smoothing:antialiased;
 }
 a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(255,51,102,.35)}
@@ -74,13 +76,22 @@ nav details[open] summary::after{content:" ▴"}
   nav summary{cursor:default;pointer-events:none;padding:0}
   nav summary::after{content:""}
 }
-nav ol{list-style:none;margin:0 0 48px;padding:0;font-size:.92rem}
-nav li{margin:0 0 2px}
-nav a{
-  display:block;padding:5px 0 5px 12px;color:var(--dim);
-  border-bottom:none;border-left:2px solid var(--line)
+nav .grp{margin:0 0 22px}
+nav .grp:last-child{margin-bottom:48px}
+nav .grp-title{
+  font-size:.78rem;font-weight:700;color:var(--fg);letter-spacing:.04em;
+  margin:0 0 6px;padding-left:14px
 }
-nav a:hover{color:var(--fg);border-left-color:var(--accent)}
+nav ol{list-style:none;margin:0;padding:0;font-size:.9rem}
+nav li{margin:0}
+nav a{
+  display:flex;gap:10px;align-items:baseline;padding:5px 0 5px 12px;color:var(--dim);
+  border-bottom:none;border-left:2px solid var(--line);line-height:1.45
+}
+nav a .n{font-family:var(--mono);font-size:.72rem;color:var(--faint);flex:none;width:1.6em}
+nav a:hover{color:var(--fg);border-left-color:var(--dim)}
+nav a.on{color:var(--fg);border-left-color:var(--accent)}
+nav a.on .n{color:var(--accent)}
 
 /* ---- content ---- */
 main{min-width:0;padding-bottom:120px}
@@ -142,7 +153,7 @@ thead th{
   color:var(--faint);font-weight:600;white-space:nowrap
 }
 tbody th{font-family:var(--mono);font-weight:700;color:var(--fg);white-space:nowrap}
-td{color:var(--dim);word-break:auto-phrase}
+td{color:var(--dim)}
 td strong{color:var(--fg);font-weight:600}
 td.all{color:var(--faint)}
 table.modes{min-width:720px}
@@ -171,21 +182,88 @@ table.modes td.odd{background:rgba(255,51,102,.07)}
 
 footer{border-top:1px solid var(--line);padding:36px 0 80px;color:var(--faint);font-size:.88rem}
 footer a{color:var(--dim)}
+
+/* Language pairs share structure, section IDs and navigation links. */
+html[lang="ja"] [data-i18n][lang="en"],
+html[lang="en"] [data-i18n][lang="ja"]{display:none}
+html[lang="ja"] body,html[lang="ja"] td{word-break:auto-phrase}
+body{overflow-wrap:break-word}
+.hero{position:relative;min-width:0}
+.language-switch{
+  position:absolute;top:18px;right:16px;display:flex;align-items:center;
+  gap:8px;max-width:calc(100% - 32px);font-family:var(--mono);font-size:.8rem
+}
+.language-switch button{
+  font:inherit;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:5px;padding:6px 10px;cursor:pointer;min-height:36px
+}
+.language-switch button[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+.language-switch button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(min-width:960px){.language-switch{right:32px}}
 </style>
+<script>
+// Resolve before rendering to avoid showing the wrong language on first paint.
+(function () {
+  var key = 'focus-decay-language';
+  var metadata = {
+    ja: { title: 'Focus Decay Effect 説明書', description: "VirtualLens2 で撮った写真の、ピントが合っていないところだけを壊す VRChat アバターギミック「Focus Decay Effect」の説明書。導入手順、メニューの全項目、エラーの対処、更新履歴。", ogDescription: "VirtualLens2 で撮った写真の、ピントが合っていないところだけを壊す VRChat アバターギミックの説明書。" },
+    en: { title: 'Focus Decay Effect Manual', description: 'A VRChat avatar effect that distorts only out-of-focus areas in VirtualLens2 photos. Installation, controls, troubleshooting, changelog, and terms of use.', ogDescription: 'A guide to the VRChat avatar effect that distorts only out-of-focus areas in VirtualLens2 photos.' }
+  };
+  function valid(value) { return value === 'ja' || value === 'en'; }
+  function apply(language) {
+    document.documentElement.lang = language;
+    document.title = metadata[language].title;
+    document.querySelector('meta[name="description"]').content = metadata[language].description;
+    document.querySelector('meta[property="og:title"]').content = metadata[language].title;
+    document.querySelector('meta[property="og:description"]').content = metadata[language].ogDescription;
+    document.querySelectorAll('[data-language]').forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.language === language));
+    });
+  }
+  var language = new URLSearchParams(window.location.search).get('lang');
+  if (!valid(language)) {
+    try { language = localStorage.getItem(key); } catch (error) { language = null; }
+  }
+  if (!valid(language)) language = /^ja/i.test(navigator.language || '') ? 'ja' : 'en';
+  apply(language);
+  document.addEventListener('DOMContentLoaded', function () {
+    apply(language);
+    document.querySelectorAll('[data-language]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        language = button.dataset.language;
+        apply(language);
+        try { localStorage.setItem(key, language); } catch (error) { /* Storage is optional. */ }
+        // Keep an explicit URL choice in sync and preserve section anchors.
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.set('lang', language);
+          window.history.replaceState(null, '', url.href);
+        } catch (error) { /* Switching also works without history access. */ }
+      });
+    });
+  });
+})();
+</script>
 </head>
 <body>
 
 <header>
   <div class="hero">
-    <p class="eyebrow">VRChat Avatar Gimmick</p>
+    <div class="language-switch" role="group" aria-label="日本語 / English">
+      <button type="button" data-language="ja" lang="ja" aria-pressed="true">日本語</button>
+      <span aria-hidden="true">/</span>
+      <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+    </div>
+    <p class="eyebrow"><span data-i18n="0" lang="ja">VRChat Avatar Gimmick</span><span data-i18n="0" lang="en">VRChat Avatar Gimmick</span></p>
     <h1 data-text="Focus Decay Effect">Focus Decay Effect</h1>
-    <p class="lede">VirtualLens2 で撮った写真の、<strong>ピントが合っていないところだけ</strong>を壊します。
-      被写体はそのまま、ボケているところほど強く崩れます。</p>
+    <p class="lede"><span data-i18n="1" lang="ja">VirtualLens2 で撮った写真の、<strong>ピントが合っていないところだけ</strong>を壊します。
+      被写体はそのまま、ボケているところほど強く崩れます。</span><span data-i18n="1" lang="en">Distort <strong>only the out-of-focus areas</strong> of photos taken with VirtualLens2. Your subject stays intact, while blurrier areas break apart more.</span></p>
     <div class="badges">
-      <span class="badge now">v0.9.4</span>
-      <span class="badge">非破壊 / NDMF</span>
-      <span class="badge">同期コスト 0 bit</span>
-      <span class="badge">PC 専用</span>
+      <span class="badge now"><span data-i18n="2" lang="ja">v1.0</span><span data-i18n="2" lang="en">v1.0</span></span>
+      <span class="badge"><span data-i18n="3" lang="ja">2段重ねがけ対応</span><span data-i18n="3" lang="en">Stack up to 2 effects</span></span>
+      <span class="badge"><span data-i18n="4" lang="ja">非破壊 / NDMF</span><span data-i18n="4" lang="en">Non-destructive / NDMF</span></span>
+      <span class="badge"><span data-i18n="5" lang="ja">同期コスト 0 bit</span><span data-i18n="5" lang="en">0-bit sync cost</span></span>
+      <span class="badge"><span data-i18n="6" lang="ja">PC 専用</span><span data-i18n="6" lang="en">PC only</span></span>
     </div>
   </div>
 </header>
@@ -194,500 +272,597 @@ footer a{color:var(--dim)}
 
 <nav>
   <details id="toc" open>
-  <summary>目次</summary>
-  <ol>
-    <li><a href="#about">これは何か</a></li>
-    <li><a href="#require">必要なもの</a></li>
-    <li><a href="#install">導入のしかた</a></li>
-    <li><a href="#menu">メニューの場所</a></li>
-    <li><a href="#effects">エフェクト6種</a></li>
-    <li><a href="#adjust">Adjust — 崩れ方</a></li>
-    <li><a href="#colour">Colour — 色</a></li>
-    <li><a href="#presets">Presets と Reset</a></li>
-    <li><a href="#tips">思った絵にならないとき</a></li>
-    <li><a href="#errors">エラーと対処</a></li>
-    <li><a href="#limits">制限</a></li>
-    <li><a href="#update">更新のしかた</a></li>
-    <li><a href="#changelog">更新履歴</a></li>
-    <li><a href="#terms">利用規約</a></li>
-    <li><a href="#contact">連絡先</a></li>
-  </ol>
+  <summary><span data-i18n="7" lang="ja">目次</span><span data-i18n="7" lang="en">Contents</span></summary>
+  <div class="grp">
+    <p class="grp-title"><span data-i18n="8" lang="ja">はじめに</span><span data-i18n="8" lang="en">Getting started</span></p>
+    <ol>
+      <li><a href="#about"><span class="n">01</span><span data-i18n="9" lang="ja">これは何か</span><span data-i18n="9" lang="en">About</span></a></li>
+      <li><a href="#require"><span class="n">02</span><span data-i18n="10" lang="ja">必要なもの</span><span data-i18n="10" lang="en">Requirements</span></a></li>
+      <li><a href="#install"><span class="n">03</span><span data-i18n="11" lang="ja">導入のしかた</span><span data-i18n="11" lang="en">Installation</span></a></li>
+    </ol>
+  </div>
+  <div class="grp">
+    <p class="grp-title"><span data-i18n="12" lang="ja">使いかた</span><span data-i18n="12" lang="en">Using the effect</span></p>
+    <ol>
+      <li><a href="#menu"><span class="n">04</span><span data-i18n="13" lang="ja">メニューの場所</span><span data-i18n="13" lang="en">Finding the menu</span></a></li>
+      <li><a href="#effects"><span class="n">05</span><span data-i18n="14" lang="ja">エフェクト6種</span><span data-i18n="14" lang="en">Six effects</span></a></li>
+      <li><a href="#adjust"><span class="n">06</span><span data-i18n="15" lang="ja">ダイヤル — 崩れ方</span><span data-i18n="15" lang="en">Dials — distortion</span></a></li>
+      <li><a href="#colour"><span class="n">07</span><span data-i18n="16" lang="ja">色（Colour）</span><span data-i18n="16" lang="en">Colour</span></a></li>
+      <li><a href="#presets"><span class="n">08</span><span data-i18n="17" lang="ja">プリセット（Presets） と リセット（Reset）</span><span data-i18n="17" lang="en">Presets and Reset</span></a></li>
+      <li><a href="#stack"><span class="n">09</span><span data-i18n="18" lang="ja">エフェクトを重ねる</span><span data-i18n="18" lang="en">Stacking effects</span></a></li>
+    </ol>
+  </div>
+  <div class="grp">
+    <p class="grp-title"><span data-i18n="19" lang="ja">困ったとき</span><span data-i18n="19" lang="en">Troubleshooting</span></p>
+    <ol>
+      <li><a href="#tips"><span class="n">10</span><span data-i18n="20" lang="ja">思った絵にならないとき</span><span data-i18n="20" lang="en">Getting the look you want</span></a></li>
+      <li><a href="#errors"><span class="n">11</span><span data-i18n="21" lang="ja">エラーと対処</span><span data-i18n="21" lang="en">Errors and fixes</span></a></li>
+      <li><a href="#limits"><span class="n">12</span><span data-i18n="22" lang="ja">制限</span><span data-i18n="22" lang="en">Limitations</span></a></li>
+    </ol>
+  </div>
+  <div class="grp">
+    <p class="grp-title"><span data-i18n="23" lang="ja">そのほか</span><span data-i18n="23" lang="en">More</span></p>
+    <ol>
+      <li><a href="#update"><span class="n">13</span><span data-i18n="24" lang="ja">更新のしかた</span><span data-i18n="24" lang="en">Updating</span></a></li>
+      <li><a href="#changelog"><span class="n">14</span><span data-i18n="25" lang="ja">更新履歴</span><span data-i18n="25" lang="en">Changelog</span></a></li>
+      <li><a href="#terms"><span class="n">15</span><span data-i18n="26" lang="ja">利用規約</span><span data-i18n="26" lang="en">Terms of use</span></a></li>
+      <li><a href="#contact"><span class="n">16</span><span data-i18n="27" lang="ja">連絡先</span><span data-i18n="27" lang="en">Contact</span></a></li>
+    </ol>
+  </div>
   </details>
 </nav>
 
 <main>
 
 <section id="about">
-  <h2 class="sec"><span class="num">01</span>これは何か</h2>
-  <p>VirtualLens2 で写真を撮ると、被写界深度（ボケ）がかかります。このギミックは、<strong>そのボケている範囲だけ</strong>を崩します。ピントが合っている被写体には一切かかりません。</p>
-  <p>崩し方は6種類。細く伸びる、タイル状に割れる、真下に垂れる、横に流れる、水に溶ける絵の具のようににじむ、長方形に切り刻まれる。強さや粗さは12個のダイヤルで調整できます。</p>
-  <p>アバターのファイルには手を加えません。prefab を1つ入れるだけで、アップロード時のビルドでのみ組み込まれます。外すときは prefab を消すだけです。</p>
+  <h2 class="sec"><span class="num">01</span><span data-i18n="28" lang="ja">これは何か</span><span data-i18n="28" lang="en">About</span></h2>
+  <p><span data-i18n="29" lang="ja">VirtualLens2 で写真を撮ると、被写界深度（ボケ）がかかります。本ギミックは、<strong>ボケにあたる範囲</strong>にエフェクトをかけます。ピントの合っている被写体にはかかりません。</span><span data-i18n="29" lang="en">VirtualLens2 adds depth of field (blur) to your photos. This effect processes <strong>the blurred areas</strong>, leaving your in-focus subject untouched.</span></p>
+  <p><span data-i18n="30" lang="ja">これにより、被写体を残しつつ印象的なエフェクトを使用する事ができます。</span><span data-i18n="30" lang="en">Create striking effects while keeping your subject intact.</span></p>
+  <p><span data-i18n="31" lang="ja">崩し方は6種類。細く伸びる、タイル状に割れる、真下に垂れる、横に流れる、水に溶ける絵の具のようににじむ、長方形に切り刻まれる。強さや粗さは12個のダイヤルで調整できます。</span><span data-i18n="31" lang="en">Choose from six effects: fine streaks, broken tiles, downward drips, sideways drips, paint-like diffusion, and fragmented rectangles. Twelve dials control their strength and texture.</span></p>
+  <p><span data-i18n="32" lang="ja"><strong>prefab を2つ入れるとエフェクトを2段で重ねがけできます。</strong>たとえば ブロック（Blocks） で割ったあとに にじみ溶け（Fluid） でにじませる、といった組み合わせができます（<a href="#stack">エフェクトを重ねる</a>）。</span><span data-i18n="32" lang="en"><strong>Add two prefabs to stack two effects.</strong> For example, break the image into tiles with Blocks, then blend them with Fluid (see <a href="#stack">Stacking effects</a>).</span></p>
+  <p><span data-i18n="33" lang="ja">アバターのファイルには手を加えません。prefab を1つ入れるだけで、アップロード時のビルドでのみ組み込まれます。外すときは prefab を消すだけです。</span><span data-i18n="33" lang="en">Your avatar files stay untouched. Add one prefab, and the effect is integrated only during the upload build. To remove it, simply delete the prefab.</span></p>
   <div class="note calm">
-    <span class="label">仕組み</span>
-    <p>VirtualLens2 が持っているピント情報（被写界深度の計算結果）をそのまま受け取り、<strong>ボケていると判定された画素にだけグリッチをかけています。</strong>どこが壊れるかを決めているのは構図ではなく、そのときのピントです。</p>
-    <p>色を足したり、別の画像を重ねたりはしていません。<strong>撮影中の映像そのものに、リアルタイムで処理が入ります。</strong>あとから加工しているのではなく、シャッターを切った時点ですでに壊れた状態で写ります。</p>
+    <span class="label"><span data-i18n="34" lang="ja">仕組み</span><span data-i18n="34" lang="en">How it works</span></span>
+    <p><span data-i18n="35" lang="ja">VirtualLens2 が持っているピント情報（被写界深度の計算結果）をそのまま受け取り、<strong>ボケていると判定された画素にだけグリッチをかけています。</strong>どこが壊れるかを決めているのは構図ではなく、そのときのピントです。</span><span data-i18n="35" lang="en">The effect uses VirtualLens2’s focus data (its depth-of-field calculations) to <strong>glitch only pixels identified as out of focus.</strong> Your current focus determines which areas break apart, rather than the composition itself.</span></p>
+    <p><span data-i18n="36" lang="ja">色を足したり、別の画像を重ねたりはしていません。<strong>撮影中の映像そのものに、リアルタイムで処理が入ります。</strong>あとから加工しているのではなく、シャッターを切った時点ですでに壊れた状態で写ります。</span><span data-i18n="36" lang="en">It does not add colours or overlay another image. <strong>It processes the camera feed itself in real time.</strong> The distortion is already present when you take the shot; it is not applied afterwards.</span></p>
   </div>
 </section>
 
 <section id="require">
-  <h2 class="sec"><span class="num">02</span>必要なもの</h2>
+  <h2 class="sec"><span class="num">02</span><span data-i18n="37" lang="ja">必要なもの</span><span data-i18n="37" lang="en">Requirements</span></h2>
   <ul>
-    <li><strong>VirtualLens2</strong>（ろじらぼ様）… 別途ご用意ください。本パッケージには含まれていません</li>
-    <li><strong>Modular Avatar 1.18.0 以上</strong></li>
-    <li><strong>NDMF</strong> … Modular Avatar に同梱のもの</li>
-    <li><strong>Unity 2022.3 系</strong></li>
-    <li><strong>PC 版 VRChat</strong>（Quest 単体では効果は出ません）</li>
+    <li><span data-i18n="38" lang="ja"><strong>VirtualLens2</strong>（ろじらぼ様）… 別途ご用意ください。本パッケージには含まれていません</span><span data-i18n="38" lang="en"><strong>VirtualLens2</strong> (by Logilabo) — available separately; not included in this package</span></li>
+    <li><span data-i18n="39" lang="ja"><strong>Modular Avatar 1.18.0 以上</strong></span><span data-i18n="39" lang="en"><strong>Modular Avatar 1.18.0 or later</strong></span></li>
+    <li><span data-i18n="40" lang="ja"><strong>NDMF</strong> … Modular Avatar に同梱のもの</span><span data-i18n="40" lang="en"><strong>NDMF</strong> — bundled with Modular Avatar</span></li>
+    <li><span data-i18n="41" lang="ja"><strong>Unity 2022.3 系</strong></span><span data-i18n="41" lang="en"><strong>Unity 2022.3 series</strong></span></li>
+    <li><span data-i18n="42" lang="ja"><strong>PC 版 VRChat</strong>（Quest 単体では効果は出ません）</span><span data-i18n="42" lang="en"><strong>VRChat for PC</strong> (the effect does not work on standalone Quest)</span></li>
   </ul>
 
-  <h3>開発・確認に使ったバージョン</h3>
+  <h3><span data-i18n="43" lang="ja">開発・確認に使ったバージョン</span><span data-i18n="43" lang="en">Development and testing versions</span></h3>
   <ul>
-    <li>VirtualLens2 2.12.4</li>
-    <li>Modular Avatar 1.18.7</li>
-    <li>Unity 2022.3.22f1</li>
+    <li><span data-i18n="44" lang="ja">VirtualLens2 2.12.4</span><span data-i18n="44" lang="en">VirtualLens2 2.12.4</span></li>
+    <li><span data-i18n="45" lang="ja">Modular Avatar 1.18.7</span><span data-i18n="45" lang="en">Modular Avatar 1.18.7</span></li>
+    <li><span data-i18n="46" lang="ja">Unity 2022.3.22f1</span><span data-i18n="46" lang="en">Unity 2022.3.22f1</span></li>
   </ul>
-  <div class="note">
-    <span class="label">確認できている範囲</span>
-    <p>Unity 上でのビルドと、シェーダーの描画テストまでを確認しています。
-      <strong>VRChat 実機での動作は、まだ確認できていません。</strong>
-      気づいた点があれば<a href="#contact">ご連絡ください</a>。助かります。</p>
-  </div>
-  <p>VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動く見込みです。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まる設計</strong>です。その場合はご連絡ください。</p>
-  <p>VirtualLens2 の解像度設定（1080p / 1440p / 2160p / 4320p）はどれでも構いません。崩れる範囲は、その解像度で実際に出るボケの量に合わせて判定します。</p>
+  <p><span data-i18n="47" lang="ja">Unity 上でのビルド・シェーダーの描画テストに加え、VRChat 実機での動作を確認しています。</span><span data-i18n="47" lang="en">Tested in VRChat, in addition to build and shader rendering tests in Unity.</span></p>
+  <p><span data-i18n="48" lang="ja">VirtualLens2 のバージョンは固定していません。内部の構成が変わっていなければ、上記以外でもそのまま動く見込みです。もし構成が変わっていた場合は<strong>ビルド時にエラーで止まる設計</strong>です。その場合はご連絡ください。</span><span data-i18n="48" lang="en">No specific VirtualLens2 version is enforced. Other versions should work if their internal structure is unchanged. If that structure has changed, <strong>the build is designed to stop with an error.</strong> Please contact the author if this happens.</span></p>
+  <p><span data-i18n="49" lang="ja">VirtualLens2 の解像度設定（1080p / 1440p / 2160p / 4320p）はどれでも構いません。崩れる範囲は、その解像度で実際に出るボケの量に合わせて判定します。</span><span data-i18n="49" lang="en">Any VirtualLens2 resolution setting (1080p / 1440p / 2160p / 4320p) can be used. The affected area is determined by the actual amount of blur at that resolution.</span></p>
 </section>
 
 <section id="install">
-  <h2 class="sec"><span class="num">03</span>導入のしかた</h2>
+  <h2 class="sec"><span class="num">03</span><span data-i18n="50" lang="ja">導入のしかた</span><span data-i18n="50" lang="en">Installation</span></h2>
 
   <div class="note">
-    <span class="label">順番があります</span>
-    <p><strong>VirtualLens2 を先に入れてください。</strong>順番が逆だとシェーダーがエラーになります。</p>
-    <p>置き場所はどこでも構いません。<code class="path">Assets/</code> の下であれば、フォルダ整理で何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です。</p>
+    <span class="label"><span data-i18n="51" lang="ja">順番があります</span><span data-i18n="51" lang="en">Import order matters</span></span>
+    <p><span data-i18n="52" lang="ja"><strong>VirtualLens2 を先に入れてください。</strong>順番が逆だとシェーダーがエラーになります。</span><span data-i18n="52" lang="en"><strong>Import VirtualLens2 first.</strong> Importing in the opposite order causes shader errors.</span></p>
+    <p><span data-i18n="53" lang="ja">置き場所はどこでも構いません。<code class="path">Assets/</code> の下であれば、フォルダ整理で何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です。</span><span data-i18n="53" lang="en">VirtualLens2 can be anywhere under <code class="path">Assets/</code>. It is found automatically, even in deeply nested folders, and can be moved later.</span></p>
   </div>
 
-  <h3>① Unity で</h3>
+  <h3><span data-i18n="54" lang="ja">① Unity で</span><span data-i18n="54" lang="en">① In Unity</span></h3>
   <ol class="steps">
-    <li><code class="path">Assets/FocusDecayEffect/Focus Decay Effect.prefab</code> を、アバターのどこかにドラッグ＆ドロップする</li>
-    <li>アップロードする</li>
+    <li><span data-i18n="55" lang="ja">次のどちらか好きな方を1つ、アバターのどこかにドラッグ＆ドロップする：<br><code class="path">Assets/FocusDecayEffect/Focus Decay Effect (English).prefab</code> … メニューが英語<br><code class="path">Assets/FocusDecayEffect/Focus Decay Effect (日本語).prefab</code> … メニューが日本語</span><span data-i18n="55" lang="en">Drag and drop <strong>one prefab in your preferred menu language</strong> anywhere on your avatar:<br><code class="path">Assets/FocusDecayEffect/Focus Decay Effect (English).prefab</code> — English menus<br><code class="path">Assets/FocusDecayEffect/Focus Decay Effect (日本語).prefab</code> — Japanese menus</span></li>
+    <li><span data-i18n="56" lang="ja">アップロードする</span><span data-i18n="56" lang="en">Upload your avatar</span></li>
   </ol>
-  <p>置く場所はどこでも構いません。アバター直下でも、ボーンの奥でも動きます。名前を変えても構いません。ただし<strong>1つのアバターに1つだけ</strong>にしてください（2つ以上あるとビルド時にエラーで止まります）。</p>
-  <p>VirtualLens2 側で特別な設定をしていただく必要はありません。</p>
+  <p><span data-i18n="57" lang="ja">置く場所はどこでも構いません。アバター直下でも、ボーンの奥でも動きます。名前を変えても構いません。<strong>2つまで入れられます</strong>（<a href="#stack">エフェクトを重ねる</a>）。3つ以上あるとビルド時にエラーで止まります。</span><span data-i18n="57" lang="en">Place it anywhere on the avatar, directly under the root or nested under a bone. You can rename it. <strong>Up to two prefabs are supported</strong> (see <a href="#stack">Stacking effects</a>). Three or more cause a build error.</span></p>
+  <p><span data-i18n="58" lang="ja">VirtualLens2 側で特別な設定をしていただく必要はありません。</span><span data-i18n="58" lang="en">No special configuration is needed in VirtualLens2.</span></p>
 
-  <h3>② VRChat の中で</h3>
-  <p>アバターのメニューから <code>VirtualLens2 ▸ Effects ▸ Focus Decay ▸ Effect</code> を開き、<strong>6種類のうちどれか1つを点けてください。</strong></p>
-  <p>エフェクトの一覧は <code>Effect</code> の中です。<code>Focus Decay</code> を開いただけでは、そこにモード名は出てきません。</p>
+<p><span data-i18n="prefabs" lang="ja">2つのプレハブは機能が同じで、違うのはメニューの表示言語だけです。パラメータは共通なので、途中で入れ替えても保存値・プリセットは引き継がれます。</span><span data-i18n="prefabs" lang="en">Both prefabs have identical functionality; only the menu language differs. They share parameter names, so saved values and presets carry over when you switch between them.</span></p>
+  <h3><span data-i18n="59" lang="ja">② VRChat の中で</span><span data-i18n="59" lang="en">② In VRChat</span></h3>
+  <p><span data-i18n="60" lang="ja">アバターのメニューから <code>VirtualLens2 ▸ Effects ▸ フォーカスディケイ（Focus Decay） ▸ エフェクト（Effect）</code> を開き、<strong>6種類のうちどれか1つを点けてください。</strong></span><span data-i18n="60" lang="en">Open <code>VirtualLens2 ▸ Effects ▸ Focus Decay ▸ Effect</code> in your avatar menu and <strong>enable one of the six effects.</strong></span></p>
+  <p><span data-i18n="61" lang="ja">エフェクトの一覧は <code>エフェクト（Effect）</code> の中です。<code>フォーカスディケイ（Focus Decay）</code> を開いただけでは、そこにモード名は出てきません。</span><span data-i18n="61" lang="en">The effects are listed inside <code>Effect</code>. Opening <code>Focus Decay</code> alone does not show the mode names.</span></p>
   <div class="note">
-    <span class="label">ここが最初のつまずきどころ</span>
-    <p><strong>点けるまで写真は何も変わりません。</strong>6つとも消灯している状態が「効果オフ」です。ON/OFF のボタンはありません（点いているものをもう一度押せば消えます）。</p>
+    <span class="label"><span data-i18n="62" lang="ja">ここが最初のつまずきどころ</span><span data-i18n="62" lang="en">A common first hurdle</span></span>
+    <p><span data-i18n="63" lang="ja"><strong>点けるまで写真は何も変わりません。</strong>6つとも消灯している状態が「効果オフ」です。ON/OFF のボタンはありません（点いているものをもう一度押せば消えます）。</span><span data-i18n="63" lang="en"><strong>Your photos will not change until you enable an effect.</strong> All six toggles off means the effect is off. There is no separate ON/OFF button; press the active effect again to turn it off.</span></p>
   </div>
 
-  <h3>VirtualLens2 のモニターには映りません</h3>
+  <h3><span data-i18n="64" lang="ja">VirtualLens2 のモニターには映りません</span><span data-i18n="64" lang="en">The effect does not appear on the VirtualLens2 monitor</span></h3>
   <div class="note">
-    <span class="label">撮り方のコツ</span>
-    <p><strong>効果が乗るのは VRChat 標準のカメラ（デフォルトカメラ）の側です。VirtualLens2 のモニターには出ません。</strong></p>
-    <p>そのため、<strong>構図とピントは VirtualLens2 のモニターで合わせ、崩れ方はデフォルトカメラのプレビューで確認する</strong>という撮り方になります。2つを見比べながら追い込んでください。</p>
-    <p>モニターに出ていないからといって効いていないわけではありません。撮れた写真には入っています。</p>
+    <span class="label"><span data-i18n="65" lang="ja">撮り方のコツ</span><span data-i18n="65" lang="en">Shooting tip</span></span>
+    <p><span data-i18n="66" lang="ja"><strong>効果が乗るのは VRChat 標準のカメラ（デフォルトカメラ）の側です。VirtualLens2 のモニターには出ません。</strong></span><span data-i18n="66" lang="en"><strong>The effect appears on VRChat’s standard (default) camera. It does not appear on the VirtualLens2 monitor.</strong></span></p>
+    <p><span data-i18n="67" lang="ja">そのため、<strong>構図とピントは VirtualLens2 のモニターで合わせ、崩れ方はデフォルトカメラのプレビューで確認する</strong>という撮り方になります。2つを見比べながら追い込んでください。</span><span data-i18n="67" lang="en"><strong>Use the VirtualLens2 monitor to compose and focus, then check the distortion in the default camera preview.</strong> Compare the two as you fine-tune the shot.</span></p>
+    <p><span data-i18n="68" lang="ja">モニターに出ていないからといって効いていないわけではありません。撮れた写真には入っています。</span><span data-i18n="68" lang="en">An unchanged monitor does not mean the effect is inactive. The effect will appear in your captured photo.</span></p>
   </div>
 
-  <h3>効果は Unity 内では見えません</h3>
-  <p>写真・ストリーミングカメラでのみ描画される仕組みのため、シーンビュー・Play モード・ミラーには何も出ません。<strong>アップロードして VRChat 内で撮るまで確認できません。</strong></p>
+  <h3><span data-i18n="69" lang="ja">効果は Unity 内では見えません</span><span data-i18n="69" lang="en">The effect is not visible in Unity</span></h3>
+  <p><span data-i18n="70" lang="ja">写真・ストリーミングカメラでのみ描画される仕組みのため、シーンビュー・Play モード・ミラーには何も出ません。<strong>アップロードして VRChat 内で撮るまで確認できません。</strong></span><span data-i18n="70" lang="en">The effect renders only in photos and the streaming camera, so it does not appear in Scene view, Play mode, or mirrors. <strong>Upload your avatar and use the camera in VRChat to check it.</strong></span></p>
 
-  <h3>撮るときに</h3>
-  <p>VirtualLens2 の<strong>F 値を下げてください。</strong>このギミックはピントが合っていない範囲だけを壊すので、F 値が高いままだと画面全体にピントが合ってしまい、壊れる範囲がありません。F 値が最大まで上がっているとボケ自体が無効になり、効果は出ません。</p>
+  <h3><span data-i18n="71" lang="ja">撮るときに</span><span data-i18n="71" lang="en">When taking photos</span></h3>
+  <p><span data-i18n="72" lang="ja">VirtualLens2 の<strong>F 値を下げてください。</strong>このギミックはピントが合っていない範囲だけを壊すので、F 値が高いままだと画面全体にピントが合ってしまい、壊れる範囲がありません。F 値が最大まで上がっているとボケ自体が無効になり、効果は出ません。</span><span data-i18n="72" lang="en"><strong>Lower the f-number</strong> in VirtualLens2. Only out-of-focus areas are distorted; a high f-number can leave the whole image in focus, with nothing to distort. At the maximum f-number, depth-of-field blur is disabled entirely, so the effect will not appear.</span></p>
 
-  <h3>外しかた</h3>
-  <p>アバターに入れた prefab を削除するだけです。アバター側には何も残りません。パッケージごと消す場合は <code class="path">Assets/FocusDecayEffect</code> フォルダを削除してください。</p>
+  <h3><span data-i18n="73" lang="ja">外しかた</span><span data-i18n="73" lang="en">Removing the effect</span></h3>
+  <p><span data-i18n="74" lang="ja">アバターに入れた prefab を削除するだけです。アバター側には何も残りません。パッケージごと消す場合は <code class="path">Assets/FocusDecayEffect</code> フォルダを削除してください。</span><span data-i18n="74" lang="en">Delete the prefab from your avatar. Nothing is left behind on the avatar. To remove the entire package, delete the <code class="path">Assets/FocusDecayEffect</code> folder.</span></p>
 </section>
 
 <section id="menu">
-  <h2 class="sec"><span class="num">04</span>メニューの場所</h2>
-  <p>VirtualLens2 のメニューの中に入ります。カメラの設定と並ぶ位置です。</p>
-<pre class="tree"><b>VirtualLens2</b> ▸ <b>Effects</b> ▸ <b>Focus Decay</b>
- ├ Reset          <i>← 全部初期値に戻して効果オフ</i>
+  <h2 class="sec"><span class="num">04</span><span data-i18n="75" lang="ja">メニューの場所</span><span data-i18n="75" lang="en">Finding the menu</span></h2>
+  <p><span data-i18n="76" lang="ja">VirtualLens2 のメニューの中に入ります。カメラの設定と並ぶ位置です。</span><span data-i18n="76" lang="en">The effect is inside the VirtualLens2 menu, alongside the camera settings.</span></p>
+<pre class="tree"><span data-i18n="77" lang="ja"><b>VirtualLens2</b> ▸ <b>Effects</b> ▸ <b>フォーカスディケイ</b>
+ ├ リセット          <i>← 全部初期値に戻して効果オフ</i>
+ ├ エフェクト  ▸      <i>引き伸ばし / ブロック / したたり（下） / したたり（横） / にじみ溶け / グリッチ</i>
+ ├ 調整  ▸      <i>強さ / 幅 / 長さ / ずらし量 / なじませ / 変化の速さ / 効き始め / 被写体保護</i>
+ ├ 色  ▸      <i>色ずれ / 減色 / プリズム / 色にじみ</i>
+ ├ プリセット ▸      <i>呼び出し ▸ 呼び出し 1-4 ／ 保存 ▸ 保存 1-4</i>
+ ├ F値       <i>← VirtualLens2 の F値</i>
+ ├ ズーム           <i>← VirtualLens2 のズーム</i>
+ └ AFモード ▸      <i>ポイントAF / 人物AF（VirtualLens2 の AF 切り替え）</i></span><span data-i18n="77" lang="en"><b>VirtualLens2</b> ▸ <b>Effects</b> ▸ <b>Focus Decay</b>
+ ├ Reset          <i>← Restore defaults and turn the effect off</i>
  ├ Effect  ▸      <i>Smear / Blocks / Drip Down / Drip Across / Fluid / Glitch</i>
- ├ Intensity      <i>← よく使うのでここに</i>
- ├ Falloff        <i>←</i>
- ├ Adjust  ▸      <i>Width / Length / Displace / Merge / Speed / Protect</i>
+ ├ Adjust  ▸      <i>Intensity / Width / Length / Displace / Merge / Speed / Falloff / Protect</i>
  ├ Colour  ▸      <i>Chroma / Posterize / Prism / Bleed</i>
- └ Presets ▸      <i>Load ▸ Load 1-4 ／ Save ▸ Save 1-4</i></pre>
+ ├ Presets ▸      <i>Load ▸ Load 1-4 / Save ▸ Save 1-4</i>
+ ├ Aperture       <i>← VirtualLens2 f-number</i>
+ ├ Zoom           <i>← VirtualLens2 zoom</i>
+ └ AF Mode ▸      <i>Point AF / Face AF (VirtualLens2 autofocus mode)</i></span></pre>
+  <p><span data-i18n="78" lang="ja">下の3つは <strong>VirtualLens2 本体の設定</strong>をそのまま動かします。エフェクトを見ながらボケ具合や画角を詰められるように、同じ画面に置いています。VirtualLens2 のメニューで変えた値とも連動します。2つ目の prefab（フォーカスディケイ 2（Focus Decay 2））には入りません。</span><span data-i18n="78" lang="en">The bottom three controls adjust <strong>VirtualLens2’s own settings</strong>. They share this menu so you can fine-tune blur and framing while viewing the effect. Values stay in sync with the VirtualLens2 menu. These shortcuts are not included in the second prefab’s menu (Focus Decay 2).</span></p>
   <div class="note calm">
-    <span class="label">見つからないとき</span>
-    <p>VirtualLens2 のメニューが項目でいっぱいの場合は、代わりに<strong>アバターメニューの一番上</strong>に「Focus Decay」が出ます。どちらに出ても動作は同じです。</p>
+    <span class="label"><span data-i18n="79" lang="ja">見つからないとき</span><span data-i18n="79" lang="en">If you cannot find it</span></span>
+    <p><span data-i18n="80" lang="ja">VirtualLens2 のメニューが項目でいっぱいの場合は、代わりに<strong>アバターメニューの一番上</strong>に「フォーカスディケイ（Focus Decay）」が出ます。どちらに出ても動作は同じです。</span><span data-i18n="80" lang="en">If the VirtualLens2 menu is full, “Focus Decay” appears at <strong>the top level of your avatar menu</strong> instead. It works the same in either location.</span></p>
   </div>
 </section>
 
 <section id="effects">
-  <h2 class="sec"><span class="num">05</span>エフェクト6種</h2>
-  <p><code>Effect</code> の中にあります。6つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</p>
+  <h2 class="sec"><span class="num">05</span><span data-i18n="81" lang="ja">エフェクト6種</span><span data-i18n="81" lang="en">Six effects</span></h2>
+  <p><span data-i18n="82" lang="ja"><code>エフェクト（Effect）</code> の中にあります。6つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</span><span data-i18n="82" lang="en">Open <code>Effect</code> and select one of the six modes to turn it on. Turn all of them off to disable the effect.</span></p>
   <div class="tbl">
     <table>
-      <thead><tr><th>エフェクト</th><th>崩れ方</th><th>性格が変わるダイヤル</th></tr></thead>
+      <thead><tr><th><span data-i18n="83" lang="ja">エフェクト</span><span data-i18n="83" lang="en">Effect</span></th><th><span data-i18n="84" lang="ja">崩れ方</span><span data-i18n="84" lang="en">Appearance</span></th><th><span data-i18n="85" lang="ja">性格が変わるダイヤル</span><span data-i18n="85" lang="en">Dials with mode-specific behaviour</span></th></tr></thead>
       <tbody>
-        <tr><th>Smear</th><td>いろいろな向きに細く伸びる</td><td>—（6つの中で一番おとなしい）</td></tr>
-        <tr><th>Blocks</th><td>タイル状に割れて、中身がずれる</td><td><strong>Width</strong> ＝ タイルの大きさ</td></tr>
-        <tr><th>Drip Down</th><td>細い列が真下に垂れる</td><td><strong>Intensity</strong> ＝ 垂れる列の数</td></tr>
-        <tr><th>Drip Across</th><td>細い列が横に流れる</td><td><strong>Intensity</strong> ＝ 流れる列の数</td></tr>
-        <tr><th>Fluid</th><td>水に溶ける絵の具のように、色がにじんで広がる</td><td><strong>Displace</strong> ＝ 溶け具合（マーブル感）<br><strong>Chroma</strong> ＝ にじみの色</td></tr>
-        <tr><th>Glitch</th><td>ランダムな長方形に切り取られてズレ、色が分離する</td><td><strong>Intensity</strong> ＝ 切り取られる数<br><strong>Merge</strong> 0 で切り口が最も鋭い</td></tr>
+        <tr><th><span data-i18n="86" lang="ja">引き伸ばし（Smear）</span><span data-i18n="86" lang="en">Smear</span></th><td><span data-i18n="87" lang="ja">いろいろな向きに細く伸びる</span><span data-i18n="87" lang="en">Fine streaks extending in various directions</span></td><td><span data-i18n="88" lang="ja">—（6つの中で一番おとなしい）</span><span data-i18n="88" lang="en">— (the most subtle of the six)</span></td></tr>
+        <tr><th><span data-i18n="89" lang="ja">ブロック（Blocks）</span><span data-i18n="89" lang="en">Blocks</span></th><td><span data-i18n="90" lang="ja">タイル状に割れて、中身がずれる</span><span data-i18n="90" lang="en">Tiles split apart and their contents shift</span></td><td><span data-i18n="91" lang="ja"><strong>幅（Width）</strong> ＝ タイルの大きさ</span><span data-i18n="91" lang="en"><strong>Width</strong> = tile size</span></td></tr>
+        <tr><th><span data-i18n="92" lang="ja">したたり（下）（Drip Down）</span><span data-i18n="92" lang="en">Drip Down</span></th><td><span data-i18n="93" lang="ja">細い列が真下に垂れる</span><span data-i18n="93" lang="en">Thin columns drip straight down</span></td><td><span data-i18n="94" lang="ja"><strong>強さ（Intensity）</strong> ＝ 垂れる列の数</span><span data-i18n="94" lang="en"><strong>Intensity</strong> = number of dripping columns</span></td></tr>
+        <tr><th><span data-i18n="95" lang="ja">したたり（横）（Drip Across）</span><span data-i18n="95" lang="en">Drip Across</span></th><td><span data-i18n="96" lang="ja">細い列が横に流れる</span><span data-i18n="96" lang="en">Thin columns flow sideways</span></td><td><span data-i18n="97" lang="ja"><strong>強さ（Intensity）</strong> ＝ 流れる列の数</span><span data-i18n="97" lang="en"><strong>Intensity</strong> = number of flowing columns</span></td></tr>
+        <tr><th><span data-i18n="98" lang="ja">にじみ溶け（Fluid）</span><span data-i18n="98" lang="en">Fluid</span></th><td><span data-i18n="99" lang="ja">水に溶ける絵の具のように、色がにじんで広がる</span><span data-i18n="99" lang="en">Colours spread like paint dissolving in water</span></td><td><span data-i18n="100" lang="ja"><strong>ずらし量（Displace）</strong> ＝ 溶け具合（マーブル感）<br><strong>色ずれ（Chroma）</strong> ＝ にじみの色</span><span data-i18n="100" lang="en"><strong>Displace</strong> = marbling<br><strong>Chroma</strong> = colour of the diffusion</span></td></tr>
+        <tr><th><span data-i18n="101" lang="ja">グリッチ（Glitch）</span><span data-i18n="101" lang="en">Glitch</span></th><td><span data-i18n="102" lang="ja">ランダムな長方形に切り取られてズレ、色が分離する</span><span data-i18n="102" lang="en">Random rectangles shift out of place with separated colours</span></td><td><span data-i18n="103" lang="ja"><strong>強さ（Intensity）</strong> ＝ 切り取られる数<br><strong>なじませ（Merge）</strong> 0 で切り口が最も鋭い</span><span data-i18n="103" lang="en"><strong>Intensity</strong> = number of fragments<br><strong>Merge</strong> at 0 gives the sharpest edges</span></td></tr>
       </tbody>
     </table>
   </div>
   <dl class="dials">
-    <dt>Smear</dt>
-    <dd>いろいろな向きに細く伸びます。6つの中で一番おとなしく、写真に馴染みます。</dd>
-    <dt>Blocks</dt>
-    <dd>タイル状に割れて、中身がずれます。格子が見えるのが持ち味です。<strong>Width で、細かいモザイクから大きなタイルまで変わります。</strong></dd>
-    <dt>Drip Down</dt>
-    <dd>細い列が真下に垂れます。裂け目は画面全体に散らばるので、どこが垂れるかはピントが決めます。</dd>
-    <dt>Drip Across</dt>
-    <dd>同じものが横に流れます。</dd>
-    <dt>Fluid</dt>
-    <dd>水に溶ける絵の具のように、色がにじんで広がります。<strong>Displace がマーブル感のつまみです。</strong>上げるほど輪郭が曲がって渦を巻き、下げるほど穏やかなにじみになります。
+    <dt><span data-i18n="104" lang="ja">引き伸ばし（Smear）</span><span data-i18n="104" lang="en">Smear</span></dt>
+    <dd><span data-i18n="105" lang="ja">いろいろな向きに細く伸びます。6つの中で一番おとなしく、写真に馴染みます。</span><span data-i18n="105" lang="en">Fine streaks extend in various directions. The most subtle of the six effects, it blends naturally into a photo.</span></dd>
+    <dt><span data-i18n="106" lang="ja">ブロック（Blocks）</span><span data-i18n="106" lang="en">Blocks</span></dt>
+    <dd><span data-i18n="107" lang="ja">タイル状に割れて、中身がずれます。格子が見えるのが持ち味です。<strong>幅（Width） で、細かいモザイクから大きなタイルまで変わります。</strong></span><span data-i18n="107" lang="en">Tiles split apart and their contents shift, creating a distinctive grid. <strong>Width ranges from a fine mosaic to large tiles.</strong></span></dd>
+    <dt><span data-i18n="108" lang="ja">したたり（下）（Drip Down）</span><span data-i18n="108" lang="en">Drip Down</span></dt>
+    <dd><span data-i18n="109" lang="ja">細い列が真下に垂れます。裂け目は画面全体に散らばるので、どこが垂れるかはピントが決めます。</span><span data-i18n="109" lang="en">Thin columns drip straight down. Breaks are scattered across the image, so your focus determines where the drips appear.</span></dd>
+    <dt><span data-i18n="110" lang="ja">したたり（横）（Drip Across）</span><span data-i18n="110" lang="en">Drip Across</span></dt>
+    <dd><span data-i18n="111" lang="ja">同じものが横に流れます。</span><span data-i18n="111" lang="en">The same effect, flowing sideways.</span></dd>
+    <dt><span data-i18n="112" lang="ja">にじみ溶け（Fluid）</span><span data-i18n="112" lang="en">Fluid</span></dt>
+    <dd><span data-i18n="113" lang="ja">水に溶ける絵の具のように、色がにじんで広がります。<strong>ずらし量（Displace） がマーブル感のつまみです。</strong>上げるほど輪郭が曲がって渦を巻き、下げるほど穏やかなにじみになります。
       <strong>0 にすると渦が完全に止まり、ボケに近い見え方になります</strong>ので、「効いていない」と感じたら 0.3〜0.5 から試してください。
-      色は Chroma が作ります。<strong>Chroma を 0 にすると灰色のにじみ</strong>になります。</dd>
-    <dt>Glitch</dt>
-    <dd>ランダムな大きさの長方形に切り取られてズレ、色が分離します。格子にならないよう、帯の高さも列の幅もばらついています。切り口はぼかしていません。
-      主に横へ飛びますが、ときどき縦にも飛びます。<strong>切り口を最も鋭くしたいときは Merge を 0 に</strong>してください。</dd>
+      色は 色ずれ（Chroma） が作ります。<strong>色ずれ（Chroma） を 0 にすると灰色のにじみ</strong>になります。</span><span data-i18n="113" lang="en">Colours spread like paint dissolving in water. <strong>Displace controls the marbling.</strong> Higher values bend contours into swirls; lower values produce gentler diffusion. <strong>At 0, swirling stops completely and the result looks more like blur.</strong> If the effect seems absent, try 0.3–0.5. Chroma supplies the colour. <strong>At Chroma 0, the diffusion is grey.</strong></span></dd>
+    <dt><span data-i18n="114" lang="ja">グリッチ（Glitch）</span><span data-i18n="114" lang="en">Glitch</span></dt>
+    <dd><span data-i18n="115" lang="ja">ランダムな大きさの長方形に切り取られてズレ、色が分離します。格子にならないよう、帯の高さも列の幅もばらついています。切り口はぼかしていません。
+      主に横へ飛びますが、ときどき縦にも飛びます。<strong>切り口を最も鋭くしたいときは なじませ（Merge） を 0 に</strong>してください。</span><span data-i18n="115" lang="en">Randomly sized rectangles shift out of place with separated colours. Varying row heights and column widths prevent a regular grid, and edges are not softened. Movement is mostly horizontal, with occasional vertical shifts. <strong>Set Merge to 0 for the sharpest edges.</strong></span></dd>
   </dl>
 </section>
 
 <section id="adjust">
-  <h2 class="sec"><span class="num">06</span>ダイヤル — 崩れ方</h2>
+  <h2 class="sec"><span class="num">06</span><span data-i18n="116" lang="ja">ダイヤル — 崩れ方</span><span data-i18n="116" lang="en">Dials — distortion</span></h2>
 
-  <h3>どのダイヤルがどのモードに効くか</h3>
-  <p>色のついたマスが、<strong>そのモードで意味が変わるもの</strong>です。</p>
+  <h3><span data-i18n="117" lang="ja">どのダイヤルがどのモードに効くか</span><span data-i18n="117" lang="en">How each dial affects each mode</span></h3>
+  <p><span data-i18n="118" lang="ja">色のついたマスが、<strong>そのモードで意味が変わるもの</strong>です。</span><span data-i18n="118" lang="en">Highlighted cells indicate <strong>controls whose behaviour changes in that mode.</strong></span></p>
   <div class="tbl">
     <table class="modes">
-      <thead><tr><th></th><th>Smear</th><th>Blocks</th><th>Drip Down / Across</th><th>Glitch</th><th>Fluid</th></tr></thead>
+      <thead><tr><th><span data-i18n="119" lang="ja"></span><span data-i18n="119" lang="en"></span></th><th><span data-i18n="120" lang="ja">引き伸ばし（Smear）</span><span data-i18n="120" lang="en">Smear</span></th><th><span data-i18n="121" lang="ja">ブロック（Blocks）</span><span data-i18n="121" lang="en">Blocks</span></th><th><span data-i18n="122" lang="ja">したたり（下） / したたり（横）（Drip Down / Across）</span><span data-i18n="122" lang="en">Drip Down / Across</span></th><th><span data-i18n="123" lang="ja">グリッチ（Glitch）</span><span data-i18n="123" lang="en">Glitch</span></th><th><span data-i18n="124" lang="ja">にじみ溶け（Fluid）</span><span data-i18n="124" lang="en">Fluid</span></th></tr></thead>
       <tbody>
-        <tr><th>Intensity</th><td>崩れる量</td><td>崩れる量</td><td class="odd"><strong>垂れる列の数</strong></td><td class="odd"><strong>切り取られる数</strong></td><td>崩れる量</td></tr>
-        <tr><th>Falloff</th><td class="all" colspan="5">どのくらいボケたら最大まで壊すか（全モード共通）</td></tr>
-        <tr><th>Width</th><td>筋の太さ</td><td class="odd"><strong>タイルの大きさ</strong></td><td>列の太さ</td><td>長方形の大きさ</td><td>にじみの塊の大きさ</td></tr>
-        <tr><th>Length</th><td>筋の長さ</td><td>引きずる距離</td><td>垂れの長さ</td><td>長方形が飛ぶ距離</td><td>にじみが届く距離</td></tr>
-        <tr><th>Displace</th><td colspan="4">画素をずらす距離</td><td class="odd"><strong>溶け具合（マーブル感）</strong></td></tr>
-        <tr><th>Merge</th><td class="all" colspan="5">隣の崩れと引っ張り合って隙間を埋める（全モード共通）</td></tr>
-        <tr><th>Speed</th><td class="all" colspan="5">崩れ方を1秒に何回抽選し直すか（全モード共通）</td></tr>
-        <tr><th>Protect</th><td colspan="4">被写体が背景へコピーされるのを防ぐ</td><td class="odd"><strong>ほとんど効かない</strong></td></tr>
-        <tr><th>Chroma</th><td colspan="4">輪郭の赤と青をずらす</td><td class="odd"><strong>にじみの縁の色そのもの</strong></td></tr>
-        <tr><th>Posterize<br>Prism<br>Bleed</th><td class="all" colspan="5">色の仕上げ（全モード共通）</td></tr>
+        <tr><th><span data-i18n="125" lang="ja">強さ（Intensity）</span><span data-i18n="125" lang="en">Intensity</span></th><td><span data-i18n="126" lang="ja">崩れる量</span><span data-i18n="126" lang="en">Amount of distortion</span></td><td><span data-i18n="127" lang="ja">崩れる量</span><span data-i18n="127" lang="en">Amount of distortion</span></td><td class="odd"><span data-i18n="128" lang="ja"><strong>垂れる列の数</strong></span><span data-i18n="128" lang="en"><strong>Number of dripping columns</strong></span></td><td class="odd"><span data-i18n="129" lang="ja"><strong>切り取られる数</strong></span><span data-i18n="129" lang="en"><strong>Number of fragments</strong></span></td><td><span data-i18n="130" lang="ja">崩れる量</span><span data-i18n="130" lang="en">Amount of distortion</span></td></tr>
+        <tr><th><span data-i18n="131" lang="ja">効き始め（Falloff）</span><span data-i18n="131" lang="en">Falloff</span></th><td class="all" colspan="5"><span data-i18n="132" lang="ja">どのくらいボケたら最大まで壊すか（全モード共通）</span><span data-i18n="132" lang="en">How much blur is needed for full distortion (all modes)</span></td></tr>
+        <tr><th><span data-i18n="133" lang="ja">幅（Width）</span><span data-i18n="133" lang="en">Width</span></th><td><span data-i18n="134" lang="ja">筋の太さ</span><span data-i18n="134" lang="en">Streak width</span></td><td class="odd"><span data-i18n="135" lang="ja"><strong>タイルの大きさ</strong></span><span data-i18n="135" lang="en"><strong>Tile size</strong></span></td><td><span data-i18n="136" lang="ja">列の太さ</span><span data-i18n="136" lang="en">Column width</span></td><td><span data-i18n="137" lang="ja">長方形の大きさ</span><span data-i18n="137" lang="en">Rectangle size</span></td><td><span data-i18n="138" lang="ja">にじみの塊の大きさ</span><span data-i18n="138" lang="en">Size of diffusion patches</span></td></tr>
+        <tr><th><span data-i18n="139" lang="ja">長さ（Length）</span><span data-i18n="139" lang="en">Length</span></th><td><span data-i18n="140" lang="ja">筋の長さ</span><span data-i18n="140" lang="en">Streak length</span></td><td><span data-i18n="141" lang="ja">引きずる距離</span><span data-i18n="141" lang="en">Drag distance</span></td><td><span data-i18n="142" lang="ja">垂れの長さ</span><span data-i18n="142" lang="en">Drip length</span></td><td><span data-i18n="143" lang="ja">長方形が飛ぶ距離</span><span data-i18n="143" lang="en">Rectangle shift distance</span></td><td><span data-i18n="144" lang="ja">にじみが届く距離</span><span data-i18n="144" lang="en">Diffusion reach</span></td></tr>
+        <tr><th><span data-i18n="145" lang="ja">ずらし量（Displace）</span><span data-i18n="145" lang="en">Displace</span></th><td colspan="4"><span data-i18n="146" lang="ja">画素をずらす距離</span><span data-i18n="146" lang="en">Pixel displacement distance</span></td><td class="odd"><span data-i18n="147" lang="ja"><strong>溶け具合（マーブル感）</strong></span><span data-i18n="147" lang="en"><strong>Marbling</strong></span></td></tr>
+        <tr><th><span data-i18n="148" lang="ja">なじませ（Merge）</span><span data-i18n="148" lang="en">Merge</span></th><td class="all" colspan="5"><span data-i18n="149" lang="ja">隣の崩れと引っ張り合って隙間を埋める（全モード共通）</span><span data-i18n="149" lang="en">Pulls neighbouring distortions together to fill gaps (all modes)</span></td></tr>
+        <tr><th><span data-i18n="150" lang="ja">変化の速さ（Speed）</span><span data-i18n="150" lang="en">Speed</span></th><td class="all" colspan="5"><span data-i18n="151" lang="ja">崩れ方を1秒に何回抽選し直すか（全モード共通）</span><span data-i18n="151" lang="en">How often the distortion pattern is randomised per second (all modes)</span></td></tr>
+        <tr><th><span data-i18n="152" lang="ja">被写体保護（Protect）</span><span data-i18n="152" lang="en">Protect</span></th><td colspan="4"><span data-i18n="153" lang="ja">被写体が背景へコピーされるのを防ぐ</span><span data-i18n="153" lang="en">Prevents the subject from being copied into the background</span></td><td class="odd"><span data-i18n="154" lang="ja"><strong>ほとんど効かない</strong></span><span data-i18n="154" lang="en"><strong>Little effect</strong></span></td></tr>
+        <tr><th><span data-i18n="155" lang="ja">色ずれ（Chroma）</span><span data-i18n="155" lang="en">Chroma</span></th><td colspan="4"><span data-i18n="156" lang="ja">輪郭の赤と青をずらす</span><span data-i18n="156" lang="en">Offsets red and blue at edges</span></td><td class="odd"><span data-i18n="157" lang="ja"><strong>にじみの縁の色そのもの</strong></span><span data-i18n="157" lang="en"><strong>Creates the colour at diffusion edges</strong></span></td></tr>
+        <tr><th><span data-i18n="158" lang="ja">減色（Posterize）<br>プリズム（Prism）<br>色にじみ（Bleed）</span><span data-i18n="158" lang="en">Posterize<br>Prism<br>Bleed</span></th><td class="all" colspan="5"><span data-i18n="159" lang="ja">色の仕上げ（全モード共通）</span><span data-i18n="159" lang="en">Colour finishing (all modes)</span></td></tr>
       </tbody>
     </table>
   </div>
-  <p class="tbl-hint">表は横にスクロールできます。</p>
+  <p class="tbl-hint"><span data-i18n="160" lang="ja">表は横にスクロールできます。</span><span data-i18n="160" lang="en">Scroll the table horizontally.</span></p>
 
   <div class="note">
-    <span class="label">Fluid の Displace は意味が違います</span>
-    <p>ほかのモードの Displace は「画素をずらす距離」ですが、<strong>Fluid では「溶け具合」</strong>です。上げるほど輪郭が曲がって渦を巻き、マーブル模様になります。</p>
-    <p><strong>マーブル感を抑えたいときは、Displace を下げてください。</strong>渦が収まって、素直なにじみに近づきます。0 まで下げると渦が完全に止まり、ボケに近い見え方になります。</p>
+    <span class="label"><span data-i18n="161" lang="ja">にじみ溶け（Fluid） の ずらし量（Displace） は意味が違います</span><span data-i18n="161" lang="en">Displace works differently in Fluid</span></span>
+    <p><span data-i18n="162" lang="ja">ほかのモードの ずらし量（Displace） は「画素をずらす距離」ですが、<strong>にじみ溶け（Fluid） では「溶け具合」</strong>です。上げるほど輪郭が曲がって渦を巻き、マーブル模様になります。</span><span data-i18n="162" lang="en">In other modes, Displace sets pixel displacement distance. <strong>In Fluid, it controls marbling.</strong> Higher values bend contours into swirling, marbled patterns.</span></p>
+    <p><span data-i18n="163" lang="ja"><strong>マーブル感を抑えたいときは、ずらし量（Displace） を下げてください。</strong>渦が収まって、素直なにじみに近づきます。0 まで下げると渦が完全に止まり、ボケに近い見え方になります。</span><span data-i18n="163" lang="en"><strong>Lower Displace to reduce marbling.</strong> Swirls settle into smoother diffusion. At 0, they stop completely and the result looks more like blur.</span></p>
   </div>
 
-  <h3>root にある2つ</h3>
+<p><span data-i18n="adjust-v1" lang="ja">調整（Adjust）には8つのダイヤルがあります。よく使う2つから説明します。</span><span data-i18n="adjust-v1" lang="en">Adjust holds eight dials. The two you will reach for most come first.</span></p>
+  <h3><span data-i18n="164" lang="ja">よく使う2つ</span><span data-i18n="164" lang="en">The two most-used dials</span></h3>
   <dl class="dials">
-    <dt>Intensity</dt>
-    <dd>効果の強さ。<br>
-      <strong>Drip Down / Drip Across / Glitch では意味が変わり、「壊れる数」になります。</strong>下げると薄くなるのではなく、垂れる列や飛ぶ長方形の数が減って歯抜けになります。</dd>
+    <dt><span data-i18n="165" lang="ja">強さ（Intensity）</span><span data-i18n="165" lang="en">Intensity</span></dt>
+    <dd><span data-i18n="166" lang="ja">効果の強さ。<br>
+      <strong>したたり（下）（Drip Down） / したたり（横）（Drip Across） / グリッチ（Glitch） では意味が変わり、「壊れる数」になります。</strong>下げると薄くなるのではなく、垂れる列や飛ぶ長方形の数が減って歯抜けになります。</span><span data-i18n="166" lang="en">Effect strength.<br><strong>In Drip Down, Drip Across, and Glitch, it controls the number of distorted elements instead.</strong> Lower values leave gaps by reducing the number of dripping columns or displaced rectangles, rather than fading the effect.</span></dd>
 
-    <dt>Falloff</dt>
-    <dd>どのくらいボケたら最大まで壊すか。<strong>下げるほど、浅いボケでも壊れます。</strong>
-      <strong>初期値はダイヤルのかなり左寄り</strong>です。右に回すほど「深いボケしか壊さない」状態に近づき、行きすぎると何も起きなくなります。</dd>
+    <dt><span data-i18n="167" lang="ja">効き始め（Falloff）</span><span data-i18n="167" lang="en">Falloff</span></dt>
+    <dd><span data-i18n="168" lang="ja">どのくらいボケたら最大まで壊すか。<strong>下げるほど、浅いボケでも壊れます。</strong>
+      <strong>初期値はダイヤルのかなり左寄り</strong>です。右に回すほど「深いボケしか壊さない」状態に近づき、行きすぎると何も起きなくなります。</span><span data-i18n="168" lang="en">How much blur is needed for full distortion. <strong>Lower values affect even lightly blurred areas.</strong> <strong>The default is near the low end of the dial.</strong> Turning it up restricts the effect to deeper blur; too high, and nothing happens.</span></dd>
   </dl>
 
-  <h3>Adjust の6つ</h3>
+  <h3><span data-i18n="169" lang="ja">そのほかの6つ</span><span data-i18n="169" lang="en">The other six</span></h3>
   <dl class="dials">
-    <dt>Width</dt>
-    <dd>崩れの大きさ。<strong>Blocks</strong> では 0 で細かいモザイク、1 で大きなタイル。<strong>Glitch</strong> では切り取る長方形の大きさ。<strong>Fluid</strong> ではにじみの塊の大きさ。Drip では垂れる列の太さ、Smear では筋の太さです。</dd>
+    <dt><span data-i18n="170" lang="ja">幅（Width）</span><span data-i18n="170" lang="en">Width</span></dt>
+    <dd><span data-i18n="171" lang="ja">崩れの大きさ。<strong>ブロック（Blocks）</strong> では 0 で細かいモザイク、1 で大きなタイル。<strong>グリッチ（Glitch）</strong> では切り取る長方形の大きさ。<strong>にじみ溶け（Fluid）</strong> ではにじみの塊の大きさ。Drip では垂れる列の太さ、引き伸ばし（Smear） では筋の太さです。</span><span data-i18n="171" lang="en">Size of the distortion. In <strong>Blocks</strong>, 0 gives a fine mosaic and 1 gives large tiles. In <strong>Glitch</strong>, it sets rectangle size; in <strong>Fluid</strong>, diffusion patch size. In the Drip modes, it sets column width; in Smear, streak width.</span></dd>
 
-    <dt>Length</dt>
-    <dd>崩れの長さ。走りの長さ、垂れの長さ。<strong>Fluid ではにじみが届く距離</strong>、<strong>Glitch では長方形が飛ぶ距離</strong>です。</dd>
+    <dt><span data-i18n="172" lang="ja">長さ（Length）</span><span data-i18n="172" lang="en">Length</span></dt>
+    <dd><span data-i18n="173" lang="ja">崩れの長さ。走りの長さ、垂れの長さ。<strong>にじみ溶け（Fluid） ではにじみが届く距離</strong>、<strong>グリッチ（Glitch） では長方形が飛ぶ距離</strong>です。</span><span data-i18n="173" lang="en">Length of streaks and drips. In <strong>Fluid, it sets how far diffusion reaches</strong>; in <strong>Glitch, how far rectangles shift.</strong></span></dd>
 
-    <dt>Displace</dt>
-    <dd>画素をどれだけ引きずるか。<strong>初期値の中央が標準</strong>で、右に回すと最大2倍まで伸びます。0 にすると絵は動かず、色の変化だけが残ります。<br>
-      <strong>Fluid だけ意味が変わり、マーブル感になります。</strong>0 で小さく穏やかなにじみ、1 で大きく渦を巻いたにじみ。にじみの広さも一緒に動きます。</dd>
+    <dt><span data-i18n="174" lang="ja">ずらし量（Displace）</span><span data-i18n="174" lang="en">Displace</span></dt>
+    <dd><span data-i18n="175" lang="ja">画素をどれだけ引きずるか。<strong>初期値の中央が標準</strong>で、右に回すと最大2倍まで伸びます。0 にすると絵は動かず、色の変化だけが残ります。<br>
+      <strong>にじみ溶け（Fluid） だけ意味が変わり、マーブル感になります。</strong>0 で小さく穏やかなにじみ、1 で大きく渦を巻いたにじみ。にじみの広さも一緒に動きます。</span><span data-i18n="175" lang="en">How far pixels are dragged. <strong>The default midpoint is the standard distance</strong>; turning it up extends that distance to twice as far. At 0, the image stays in place and only colour changes remain.<br><strong>In Fluid, it controls marbling instead.</strong> At 0, diffusion is small and gentle; at 1, it forms large swirls. The spread of the diffusion also changes.</span></dd>
 
-    <dt>Merge</dt>
-    <dd>隣の崩れと引っ張り合って、<strong>崩れていない隙間を埋めます。</strong>上げるほど効果が広がります。
-      逆に<strong>Glitch の切り口を鋭く保ちたいときは 0 に</strong>してください。</dd>
+    <dt><span data-i18n="176" lang="ja">なじませ（Merge）</span><span data-i18n="176" lang="en">Merge</span></dt>
+    <dd><span data-i18n="177" lang="ja">隣の崩れと引っ張り合って、<strong>崩れていない隙間を埋めます。</strong>上げるほど効果が広がります。
+      逆に<strong>グリッチ（Glitch） の切り口を鋭く保ちたいときは 0 に</strong>してください。</span><span data-i18n="177" lang="en">Pulls neighbouring distortions together to <strong>fill undistorted gaps.</strong> Higher values spread the effect further. <strong>Set it to 0 to keep Glitch edges sharp.</strong></span></dd>
 
-    <dt>Speed</dt>
-    <dd>崩れ方を1秒に何回抽選し直すか。<strong>0 にすると止まり、同じ構図なら何枚撮っても同じ絵になります。</strong>写真の中で何かが動くダイヤルではありません。追い込んだ1枚を撮り直したいときは 0 にしてください。</dd>
+    <dt><span data-i18n="178" lang="ja">変化の速さ（Speed）</span><span data-i18n="178" lang="en">Speed</span></dt>
+    <dd><span data-i18n="179" lang="ja">崩れ方を1秒に何回抽選し直すか。<strong>0 にすると止まり、同じ構図なら何枚撮っても同じ絵になります。</strong>写真の中で何かが動くダイヤルではありません。追い込んだ1枚を撮り直したいときは 0 にしてください。</span><span data-i18n="179" lang="en">How often the distortion pattern is randomised per second. <strong>At 0, the pattern freezes, so the same composition produces the same result across shots.</strong> It does not animate objects within a captured photo. Use 0 when you want to retake a carefully tuned shot.</span></dd>
 
-    <dt>Protect</dt>
-    <dd><strong>被写体が背景へコピーされるのを防ぎます。</strong>初期値は 0（＝防がない）で、被写体が引きずられて伸びます。<strong>像が二重に見えるのが気になるときは上げてください。</strong>被写体そのものは、どの値でも壊れません。<br>
-      <strong>Fluid ではほとんど効きません。</strong>周囲から広く色を集める仕組みのため、1点を見る判定では止められません。</dd>
+    <dt><span data-i18n="180" lang="ja">被写体保護（Protect）</span><span data-i18n="180" lang="en">Protect</span></dt>
+    <dd><span data-i18n="181" lang="ja"><strong>被写体が背景へコピーされるのを防ぎます。</strong>初期値は 0（＝防がない）で、被写体が引きずられて伸びます。<strong>像が二重に見えるのが気になるときは上げてください。</strong>被写体そのものは、どの値でも壊れません。<br>
+      <strong>にじみ溶け（Fluid） ではほとんど効きません。</strong>周囲から広く色を集める仕組みのため、1点を見る判定では止められません。</span><span data-i18n="181" lang="en"><strong>Prevents the subject from being copied into the background.</strong> The default is 0 (no protection), allowing the subject to be dragged and stretched. <strong>Raise it if you see unwanted duplicate images.</strong> The in-focus subject itself stays intact at any value.<br><strong>It has little effect in Fluid.</strong> Fluid gathers colours from a wide area, which a single-point check cannot block.</span></dd>
   </dl>
 </section>
 
 <section id="colour">
-  <h2 class="sec"><span class="num">07</span>Colour — 色</h2>
+  <h2 class="sec"><span class="num">07</span><span data-i18n="182" lang="ja">色（Colour）</span><span data-i18n="182" lang="en">Colour</span></h2>
   <dl class="dials">
-    <dt>Chroma</dt>
-    <dd>赤と青を、崩れた向きの前後から取ってくる量。<strong>輪郭のある場所ほど色がずれて見えます。</strong>ボケが深く平坦な場所では変化が小さく出ます。<br>
-      <strong>Fluid では役割が違い、にじみの縁に出る色そのものを作ります。0 にすると灰色のにじみになります。</strong></dd>
+    <dt><span data-i18n="183" lang="ja">色ずれ（Chroma）</span><span data-i18n="183" lang="en">Chroma</span></dt>
+    <dd><span data-i18n="184" lang="ja">赤と青を、崩れた向きの前後から取ってくる量。<strong>輪郭のある場所ほど色がずれて見えます。</strong>ボケが深く平坦な場所では変化が小さく出ます。<br>
+      <strong>にじみ溶け（Fluid） では役割が違い、にじみの縁に出る色そのものを作ります。0 にすると灰色のにじみになります。</strong></span><span data-i18n="184" lang="en">How far red and blue are sampled from opposite ends of the distortion direction. <strong>Colour separation is most visible around edges.</strong> The change is subtler in flat, heavily blurred areas.<br><strong>In Fluid, it creates the colours along the edges of the diffusion. At 0, the diffusion is grey.</strong></span></dd>
 
-    <dt>Posterize</dt>
-    <dd>減色の強さ。</dd>
+    <dt><span data-i18n="185" lang="ja">減色（Posterize）</span><span data-i18n="185" lang="en">Posterize</span></dt>
+    <dd><span data-i18n="186" lang="ja">減色の強さ。</span><span data-i18n="186" lang="en">Strength of colour reduction.</span></dd>
 
-    <dt>Prism</dt>
-    <dd>割れた液晶のように、崩れた場所へ原色がまとまって入ります。<strong>強い効果です。0.1〜0.3 から試してください</strong>（初期値は 0）。</dd>
+    <dt><span data-i18n="187" lang="ja">プリズム（Prism）</span><span data-i18n="187" lang="en">Prism</span></dt>
+    <dd><span data-i18n="188" lang="ja">割れた液晶のように、崩れた場所へ原色がまとまって入ります。<strong>強い効果です。0.1〜0.3 から試してください</strong>（初期値は 0）。</span><span data-i18n="188" lang="en">Adds patches of primary colour to distorted areas, like a cracked LCD. <strong>This is a strong effect; start around 0.1–0.3</strong> (the default is 0).</span></dd>
 
-    <dt>Bleed</dt>
-    <dd>色が、裂けた向きに尾を引いて滲みます。<strong>Chroma が輪郭の色ズレなのに対して、こちらは流れる滲みです。</strong>見た目にはっきり出るのはこちらです。</dd>
+    <dt><span data-i18n="189" lang="ja">色にじみ（Bleed）</span><span data-i18n="189" lang="en">Bleed</span></dt>
+    <dd><span data-i18n="190" lang="ja">色が、裂けた向きに尾を引いて滲みます。<strong>色ずれ（Chroma） が輪郭の色ズレなのに対して、こちらは流れる滲みです。</strong>見た目にはっきり出るのはこちらです。</span><span data-i18n="190" lang="en">Colours trail and bleed along the direction of the breaks. <strong>While Chroma separates colours at edges, Bleed creates flowing trails.</strong> Bleed is the more visibly pronounced effect.</span></dd>
   </dl>
 </section>
 
 <section id="presets">
-  <h2 class="sec"><span class="num">08</span>Presets と Reset</h2>
+  <h2 class="sec"><span class="num">08</span><span data-i18n="191" lang="ja">プリセット（Presets） と リセット（Reset）</span><span data-i18n="191" lang="en">Presets and Reset</span></h2>
 
-  <h3>Presets — 設定を4つまで保存</h3>
-  <p><code>Save ▸ Save 1</code> で今の設定を保存し、<code>Load ▸ Load 1</code> で呼び出します。保存されるのは<strong>ダイヤル12本と、選んでいるエフェクトの種類</strong>です。</p>
-  <p>Load と Save は別のメニューに分けてあります。撮影中に誤って上書きしないためです。</p>
-  <p>まだ保存していないスロットを Load すると、ダイヤルは初期値に戻り、<strong>エフェクトは Smear が点いた状態</strong>になります。
-    完全に消したいときは <code>Reset</code> を使ってください。</p>
+  <h3><span data-i18n="192" lang="ja">プリセット（Presets） — 設定を4つまで保存</span><span data-i18n="192" lang="en">Presets — save up to four setups</span></h3>
+  <p><span data-i18n="193" lang="ja"><code>保存（Save） ▸ 保存 1（Save 1）</code> で今の設定を保存し、<code>呼び出し（Load） ▸ 呼び出し 1（Load 1）</code> で呼び出します。保存されるのは<strong>ダイヤル12本と、選んでいるエフェクトの種類</strong>です。</span><span data-i18n="193" lang="en">Use <code>Save ▸ Save 1</code> to save your current setup and <code>Load ▸ Load 1</code> to recall it. Presets store <strong>all twelve dials and the selected effect.</strong></span></p>
+  <p><span data-i18n="194" lang="ja">呼び出し（Load） と 保存（Save） は別のメニューに分けてあります。撮影中に誤って上書きしないためです。</span><span data-i18n="194" lang="en">Load and Save are in separate menus to prevent accidental overwrites while shooting.</span></p>
+  <p><span data-i18n="195" lang="ja">まだ保存していないスロットを 呼び出し（Load） すると、ダイヤルは初期値に戻り、<strong>エフェクトは 引き伸ばし（Smear） が点いた状態</strong>になります。
+    完全に消したいときは <code>リセット（Reset）</code> を使ってください。</span><span data-i18n="195" lang="en">Loading an unused slot restores the default dial values and <strong>enables Smear.</strong> Use <code>Reset</code> to turn the effect off completely.</span></p>
 
-  <h3>Reset</h3>
-  <p>ダイヤル12本を初期値に戻し、エフェクトをオフにします。ダイヤルは今の値が画面から読めないので、触りすぎて分からなくなったらここに戻ってきてください。</p>
+  <h3><span data-i18n="196" lang="ja">リセット（Reset）</span><span data-i18n="196" lang="en">Reset</span></h3>
+  <p><span data-i18n="197" lang="ja">ダイヤル12本を初期値に戻し、エフェクトをオフにします。ダイヤルは今の値が画面から読めないので、触りすぎて分からなくなったらここに戻ってきてください。</span><span data-i18n="197" lang="en">Restores all twelve dials to their defaults and turns the effect off. The current dial values are not shown on screen, so use Reset if you lose track of your adjustments.</span></p>
+</section>
+
+<section id="stack">
+  <h2 class="sec"><span class="num">09</span><span data-i18n="198" lang="ja">エフェクトを重ねる</span><span data-i18n="198" lang="en">Stacking effects</span></h2>
+  <p><span data-i18n="199" lang="ja"><strong>prefab をもう1つ入れると、2種類のエフェクトを重ねがけできます。</strong>入れかたは1つ目と同じで、アバターのどこかにドラッグ＆ドロップするだけです。</span><span data-i18n="199" lang="en"><strong>Add another prefab to stack two effects.</strong> As with the first, simply drag and drop it anywhere on the avatar.</span></p>
+
+<p><span data-i18n="mixed" lang="ja">英語メニューと日本語メニューのプレハブを1つずつ入れて重ねがけすることもできます。メニュー名は各プレハブの表示言語に従います。</span><span data-i18n="mixed" lang="en">You can stack one English-menu prefab and one Japanese-menu prefab. Each menu uses the language of its own prefab.</span></p>
+  <h3><span data-i18n="200" lang="ja">順番</span><span data-i18n="200" lang="en">Processing order</span></h3>
+  <p><span data-i18n="201" lang="ja"><strong>階層で上にある方が1段目、下にある方が2段目</strong>です。1段目が壊した写真を、2段目がもう一度壊します。</span><span data-i18n="201" lang="en"><strong>The higher prefab in the hierarchy is stage 1; the lower one is stage 2.</strong> Stage 2 processes the image already distorted by stage 1.</span></p>
+  <p><span data-i18n="202" lang="ja">順番で見た目が変わります。たとえば ブロック（Blocks） の上に にじみ溶け（Fluid） をかけると割れたタイルがにじみ、にじみ溶け（Fluid） の上に ブロック（Blocks） をかけるとにじんだ絵がタイルに割れます。入れ替えたいときは、階層で2つの prefab の上下を入れ替えてください。</span><span data-i18n="202" lang="en">Order changes the result. Applying Fluid after Blocks makes broken tiles bleed together; applying Blocks after Fluid breaks the diffused image into tiles. To reverse the order, swap the two prefabs in the hierarchy.</span></p>
+
+  <h3><span data-i18n="203" lang="ja">メニュー</span><span data-i18n="203" lang="en">Menus</span></h3>
+<pre class="tree"><span data-i18n="204" lang="ja"><b>VirtualLens2</b> ▸ <b>Effects</b>
+ ├ フォーカスディケイ     <i>← 1段目</i>
+ └ フォーカスディケイ 2   <i>← 2段目</i></span><span data-i18n="204" lang="en"><b>VirtualLens2</b> ▸ <b>Effects</b>
+ ├ Focus Decay     <i>← Stage 1</i>
+ └ Focus Decay 2   <i>← Stage 2</i></span></pre>
+  <p><span data-i18n="205" lang="ja">中身はどちらも同じ構成です。<strong>ダイヤル・プリセット・リセット（Reset） は段ごとに別々</strong>で、片方を回してももう片方は動きません。片方だけ使いたいときは、もう片方のエフェクトを消灯しておけば効果はかかりません。</span><span data-i18n="205" lang="en">Both effect menus have the same structure. <strong>Dials, presets, and Reset are independent for each stage.</strong> Adjusting one does not change the other. To use just one stage, turn off the effect in the other.</span></p>
+
+  <h3><span data-i18n="206" lang="ja">3つ目は入れられません</span><span data-i18n="206" lang="en">A third active prefab is not supported</span></h3>
+  <p><span data-i18n="207" lang="ja"><strong>重ねられるのは2つまでです。</strong>3つ以上あるとビルドがエラーで止まります。</span><span data-i18n="207" lang="en"><strong>You can stack up to two effects.</strong> Three or more cause the build to stop with an error.</span></p>
+  <p><span data-i18n="208" lang="ja">見比べ用に置いておきたいときは、3つ目の<strong>チェックを外して無効</strong>にしてください。無効なものは数に入らず、<strong>有効なものだけで上から1段目・2段目</strong>になります。1段目を無効にすれば、残った方が1段目として動きます。</span><span data-i18n="208" lang="en">To keep a third prefab for comparison, <strong>uncheck it to disable it.</strong> Disabled prefabs are not counted; <strong>only active prefabs are assigned stages 1 and 2, from top to bottom.</strong> If you disable stage 1, the remaining prefab becomes stage 1.</span></p>
+  <p><span data-i18n="209" lang="ja">prefab を選ぶと、Inspector に何段目かが表示されます。3つ目には警告が出ます。</span><span data-i18n="209" lang="en">Select a prefab to see its stage in the Inspector. A third prefab displays a warning.</span></p>
+
+  <div class="note">
+    <span class="label"><span data-i18n="210" lang="ja">負荷について</span><span data-i18n="210" lang="en">Performance</span></span>
+    <p><span data-i18n="211" lang="ja">2段にすると、写真の処理が2回分になります。<strong>特に にじみ溶け（Fluid） は重いエフェクトなので、にじみ溶け（Fluid） を含む組み合わせは負荷が大きくなります。</strong>重いと感じたら1段に戻してください。</span><span data-i18n="211" lang="en">Two stages process the photo twice. <strong>Fluid is particularly demanding, so combinations that include Fluid cost more performance.</strong> Return to one stage if performance suffers.</span></p>
+  </div>
 </section>
 
 <section id="tips">
-  <h2 class="sec"><span class="num">09</span>思った絵にならないとき</h2>
+  <h2 class="sec"><span class="num">10</span><span data-i18n="212" lang="ja">思った絵にならないとき</span><span data-i18n="212" lang="en">Getting the look you want</span></h2>
 
-  <h3>効きが弱い / 崩れる範囲が狭い</h3>
-  <p>上から順に試してください。</p>
+  <h3><span data-i18n="213" lang="ja">効きが弱い / 崩れる範囲が狭い</span><span data-i18n="213" lang="en">The effect is weak or covers too little of the image</span></h3>
+  <p><span data-i18n="214" lang="ja">上から順に試してください。</span><span data-i18n="214" lang="en">Try these in order:</span></p>
   <ol class="steps">
-    <li><strong>VirtualLens2 の F 値を下げる。</strong>ピントの合う範囲が狭くなり、崩れる面積そのものが広がります</li>
-    <li><strong>Falloff を下げる。</strong>浅いボケでも最大の強さに届くようになります</li>
-    <li><strong>Intensity / Length / Displace を上げる</strong></li>
-    <li><strong>Merge を上げる。</strong>崩れていない隙間が埋まります</li>
+    <li><span data-i18n="215" lang="ja"><strong>VirtualLens2 の F 値を下げる。</strong>ピントの合う範囲が狭くなり、崩れる面積そのものが広がります</span><span data-i18n="215" lang="en"><strong>Lower VirtualLens2’s f-number.</strong> This narrows the in-focus area and increases the area available for distortion</span></li>
+    <li><span data-i18n="216" lang="ja"><strong>効き始め（Falloff） を下げる。</strong>浅いボケでも最大の強さに届くようになります</span><span data-i18n="216" lang="en"><strong>Lower Falloff.</strong> Even light blur can then reach full effect strength</span></li>
+    <li><span data-i18n="217" lang="ja"><strong>強さ（Intensity） / 長さ（Length） / ずらし量（Displace） を上げる</strong></span><span data-i18n="217" lang="en"><strong>Raise Intensity / Length / Displace</strong></span></li>
+    <li><span data-i18n="218" lang="ja"><strong>なじませ（Merge） を上げる。</strong>崩れていない隙間が埋まります</span><span data-i18n="218" lang="en"><strong>Raise Merge.</strong> This fills undistorted gaps</span></li>
   </ol>
 
-  <h3>被写体が二重に写る</h3>
-  <p><strong>Protect</strong> を上げてください。初期値は 0 で、被写体が背景へ引きずられる状態です。引きずり自体を演出として使いたい場合は下げたままにします。</p>
+  <h3><span data-i18n="219" lang="ja">被写体が二重に写る</span><span data-i18n="219" lang="en">The subject appears twice</span></h3>
+  <p><span data-i18n="220" lang="ja"><strong>被写体保護（Protect）</strong> を上げてください。初期値は 0 で、被写体が背景へ引きずられる状態です。引きずり自体を演出として使いたい場合は下げたままにします。</span><span data-i18n="220" lang="en">Raise <strong>Protect</strong>. Its default is 0, which allows the subject to be dragged into the background. Leave it low if you want to use that dragging as part of the look.</span></p>
 
-  <h3>同じ絵をもう一度撮りたい</h3>
-  <p><strong>Speed</strong> を 0 にしてください。崩れ方の抽選が止まり、同じ構図なら同じ絵になります。</p>
+  <h3><span data-i18n="221" lang="ja">同じ絵をもう一度撮りたい</span><span data-i18n="221" lang="en">You want to recreate the same shot</span></h3>
+  <p><span data-i18n="222" lang="ja"><strong>変化の速さ（Speed）</strong> を 0 にしてください。崩れ方の抽選が止まり、同じ構図なら同じ絵になります。</span><span data-i18n="222" lang="en">Set <strong>Speed</strong> to 0. This stops the pattern from being randomised, so the same composition produces the same result.</span></p>
 
-  <h3>写真が何も変わらない</h3>
+  <h3><span data-i18n="223" lang="ja">写真が何も変わらない</span><span data-i18n="223" lang="en">The photo does not change</span></h3>
   <ul>
-    <li>エフェクトを選んでいない（<code>Effect</code> の中の6つが全部消灯＝OFF です）</li>
-    <li>F 値が高すぎて、画面全体にピントが合っている</li>
-    <li>F 値が最大まで上がっていて、ボケ自体が無効になっている</li>
-    <li>Unity 内で見ている（Unity では見えません）</li>
-    <li><strong>VirtualLens2 のモニターを見ている</strong>（モニターには映りません。デフォルトカメラ側で確認してください）</li>
+    <li><span data-i18n="224" lang="ja">エフェクトを選んでいない（<code>エフェクト（Effect）</code> の中の6つが全部消灯＝OFF です）</span><span data-i18n="224" lang="en">No effect is selected (all six toggles inside <code>Effect</code> are off)</span></li>
+    <li><span data-i18n="225" lang="ja">F 値が高すぎて、画面全体にピントが合っている</span><span data-i18n="225" lang="en">The f-number is too high, leaving the whole image in focus</span></li>
+    <li><span data-i18n="226" lang="ja">F 値が最大まで上がっていて、ボケ自体が無効になっている</span><span data-i18n="226" lang="en">The f-number is at its maximum, disabling depth-of-field blur entirely</span></li>
+    <li><span data-i18n="227" lang="ja">Unity 内で見ている（Unity では見えません）</span><span data-i18n="227" lang="en">You are viewing it in Unity (the effect is not visible there)</span></li>
+    <li><span data-i18n="228" lang="ja"><strong>VirtualLens2 のモニターを見ている</strong>（モニターには映りません。デフォルトカメラ側で確認してください）</span><span data-i18n="228" lang="en"><strong>You are looking at the VirtualLens2 monitor</strong> (the effect does not appear there; check the default camera)</span></li>
   </ul>
 
-  <h3>メニューには出るのに効果が出ない</h3>
-  <p>prefab を、無効になっているオブジェクトの下に置いていませんか。親オブジェクトが有効になっているかご確認ください。</p>
+  <h3><span data-i18n="229" lang="ja">メニューには出るのに効果が出ない</span><span data-i18n="229" lang="en">The menu appears, but the effect does not</span></h3>
+  <p><span data-i18n="230" lang="ja">prefab を、無効になっているオブジェクトの下に置いていませんか。親オブジェクトが有効になっているかご確認ください。</span><span data-i18n="230" lang="en">Check whether the prefab is under a disabled object. Make sure its parent objects are enabled.</span></p>
 </section>
 
 <section id="errors">
-  <h2 class="sec"><span class="num">10</span>エラーと対処</h2>
-  <p>ビルド時に出るエラーです。クリックすると対処が開きます。</p>
+  <h2 class="sec"><span class="num">11</span><span data-i18n="231" lang="ja">エラーと対処</span><span data-i18n="231" lang="en">Errors and fixes</span></h2>
+  <p><span data-i18n="232" lang="ja">ビルド時に出るエラーです。クリックすると対処が開きます。</span><span data-i18n="232" lang="en">These errors appear during the build. Click an error to see how to resolve it.</span></p>
 
-  <details class="err"><summary>シェーダーが見つからないか、コンパイルに失敗しています</summary>
-    <div class="body"><p>VirtualLens2 がこのプロジェクトに入っていません。先に導入してください。</p>
-      <p>入っているのにこのエラーが出る場合は、<strong>メニューの <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code></strong> を実行してください。VirtualLens2 を探し直して、シェーダーの参照先を合わせます。</p>
-      <p>直せない場合は <code class="path">Assets/FocusDecayEffect</code> を削除すれば元に戻ります。</p></div>
+  <details class="err"><summary><span data-i18n="233" lang="ja">シェーダーが見つからないか、コンパイルに失敗しています</span><span data-i18n="233" lang="en">Shader not found or compilation failed</span></summary>
+    <div class="body"><p><span data-i18n="234" lang="ja">VirtualLens2 がこのプロジェクトに入っていません。先に導入してください。</span><span data-i18n="234" lang="en">VirtualLens2 is missing from this project. Import it first.</span></p>
+      <p><span data-i18n="235" lang="ja">入っているのにこのエラーが出る場合は、<strong>メニューの <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code></strong> を実行してください。VirtualLens2 を探し直して、シェーダーの参照先を合わせます。</span><span data-i18n="235" lang="en">If VirtualLens2 is already installed, run <strong><code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code></strong>. This searches for VirtualLens2 again and updates the shader references.</span></p>
+      <p><span data-i18n="236" lang="ja">直せない場合は <code class="path">Assets/FocusDecayEffect</code> を削除すれば元に戻ります。</span><span data-i18n="236" lang="en">If the issue persists, delete <code class="path">Assets/FocusDecayEffect</code> to undo the installation.</span></p></div>
   </details>
 
-  <details class="err"><summary>このアバターに VirtualLens2 がセットアップされていません</summary>
-    <div class="body"><p>そのアバターに VirtualLens2 が入っていません。先に導入してください。</p></div>
+  <details class="err"><summary><span data-i18n="237" lang="ja">このアバターに VirtualLens2 がセットアップされていません</span><span data-i18n="237" lang="en">VirtualLens2 is not set up on this avatar</span></summary>
+    <div class="body"><p><span data-i18n="238" lang="ja">そのアバターに VirtualLens2 が入っていません。先に導入してください。</span><span data-i18n="238" lang="en">VirtualLens2 is missing from this avatar. Add it first.</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 が Remote Only 構成になっているため、写真を処理する部分がアバターに存在しません</summary>
-    <div class="body"><p>VirtualLens Settings の Remote Only が強制有効になっています。Auto に戻すか、PC 版では Remote Only を使わない設定にしてください。</p></div>
+  <details class="err"><summary><span data-i18n="239" lang="ja">VirtualLens2 が Remote Only 構成になっているため、写真を処理する部分がアバターに存在しません</span><span data-i18n="239" lang="en">VirtualLens2 is set to Remote Only, so the avatar has no photo-processing components</span></summary>
+    <div class="body"><p><span data-i18n="240" lang="ja">VirtualLens Settings の Remote Only が強制有効になっています。Auto に戻すか、PC 版では Remote Only を使わない設定にしてください。</span><span data-i18n="240" lang="en">Remote Only is forced on in VirtualLens Settings. Set it back to Auto, or configure it so Remote Only is not used on PC.</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 の被写界深度（ボケ）の描画部分が見つかりません</summary>
-    <div class="body"><p>VirtualLens2 のボケ機能が無効になっています。通常は既定で有効です。古い VRChat SDK をお使いの場合、VirtualLens Settings の Aperture に「Enable DoF Simulation」という項目が出ますので、チェックが入っているかご確認ください。</p></div>
+  <details class="err"><summary><span data-i18n="241" lang="ja">VirtualLens2 の被写界深度（ボケ）の描画部分が見つかりません</span><span data-i18n="241" lang="en">VirtualLens2’s depth-of-field renderer was not found</span></summary>
+    <div class="body"><p><span data-i18n="242" lang="ja">VirtualLens2 のボケ機能が無効になっています。通常は既定で有効です。古い VRChat SDK をお使いの場合、VirtualLens Settings の Aperture に「Enable DoF Simulation」という項目が出ますので、チェックが入っているかご確認ください。</span><span data-i18n="242" lang="en">VirtualLens2’s depth-of-field feature is disabled. It is normally enabled by default. With an older VRChat SDK, check that “Enable DoF Simulation” is enabled under Aperture in VirtualLens Settings.</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 の被写界深度まわりの構成が想定と異なります</summary>
-    <div class="body"><p>お使いの VirtualLens2 のバージョンを添えてご連絡ください。対応を検討します。</p></div>
+  <details class="err"><summary><span data-i18n="243" lang="ja">VirtualLens2 の被写界深度まわりの構成が想定と異なります</span><span data-i18n="243" lang="en">VirtualLens2’s depth-of-field structure differs from the expected layout</span></summary>
+    <div class="body"><p><span data-i18n="244" lang="ja">お使いの VirtualLens2 のバージョンを添えてご連絡ください。対応を検討します。</span><span data-i18n="244" lang="en">Please contact the author with your VirtualLens2 version so compatibility can be investigated.</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 が Destructive モードになっている可能性があります</summary>
-    <div class="body"><p>VirtualLens2 を Apply でシーンに焼く方式で使っています。非破壊モードでご利用ください。</p></div>
+  <details class="err"><summary><span data-i18n="245" lang="ja">VirtualLens2 が Destructive モードになっている可能性があります</span><span data-i18n="245" lang="en">VirtualLens2 may be in Destructive mode</span></summary>
+    <div class="body"><p><span data-i18n="246" lang="ja">VirtualLens2 を Apply でシーンに焼く方式で使っています。非破壊モードでご利用ください。</span><span data-i18n="246" lang="en">VirtualLens2 has been baked into the scene using Apply. Use non-destructive mode instead.</span></p></div>
   </details>
 
-  <details class="err"><summary>Focus Decay Effect がこのアバターに 2 個入っています</summary>
-    <div class="body"><p>prefab が複数入っています。1つだけにしてください。</p></div>
+  <details class="err"><summary><span data-i18n="247" lang="ja">Focus Decay Effect がこのアバターに 3 個入っています。<wbr>重ねられるのは2個までです</span><span data-i18n="247" lang="en">This avatar has 3 Focus Decay Effect instances.<wbr> Only 2 can be stacked</span></summary>
+    <div class="body"><p><span data-i18n="248" lang="ja">有効な prefab が3つ以上入っています。多い分を削除するか、チェックを外して無効にしてください。上にある2つが1段目・2段目になります（<a href="#stack">エフェクトを重ねる</a>）。</span><span data-i18n="248" lang="en">There are three or more active prefabs. Delete the extras or uncheck them to disable them. The top two become stages 1 and 2 (see <a href="#stack">Stacking effects</a>).</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 の深度テクスチャを受け取れませんでした</summary>
-    <div class="body"><p>VirtualLens2 の構成が想定と異なります。お使いの VirtualLens2 のバージョンと設定を添えてご連絡ください。</p></div>
+  <details class="err"><summary><span data-i18n="249" lang="ja">2段目の部品が見つかりません</span><span data-i18n="249" lang="en">Stage 2 components are missing</span></summary>
+    <div class="body"><p><span data-i18n="250" lang="ja">2つ目の prefab が古い版のままか、ファイルが欠けています。<a href="#update">更新のしかた</a>の手順で入れ直してください。</span><span data-i18n="250" lang="en">The second prefab is outdated or has missing files. Reinstall it by following <a href="#update">Updating</a>.</span></p></div>
   </details>
 
-  <details class="err"><summary>VirtualLens2 が複数見つかりました</summary>
-    <div class="body"><p>プロジェクトに VirtualLens2 が2つ以上入っています。VCC で入れたものと手動で入れたものが二重になっているときによく出ます。警告に出ているパスのうち、使わない方を削除してください。</p></div>
+  <details class="err"><summary><span data-i18n="251" lang="ja">VirtualLens2 の深度テクスチャを受け取れませんでした</span><span data-i18n="251" lang="en">Could not receive VirtualLens2’s depth texture</span></summary>
+    <div class="body"><p><span data-i18n="252" lang="ja">VirtualLens2 の構成が想定と異なります。お使いの VirtualLens2 のバージョンと設定を添えてご連絡ください。</span><span data-i18n="252" lang="en">VirtualLens2’s structure differs from the expected layout. Please contact the author with your VirtualLens2 version and settings.</span></p></div>
   </details>
 
-  <details class="err"><summary>Modular Avatar の更新を求めるウィンドウが出る</summary>
-    <div class="body"><p>Modular Avatar 1.18.0 以上が必要です。更新してください。</p></div>
+  <details class="err"><summary><span data-i18n="253" lang="ja">VirtualLens2 が複数見つかりました</span><span data-i18n="253" lang="en">Multiple VirtualLens2 installations found</span></summary>
+    <div class="body"><p><span data-i18n="254" lang="ja">プロジェクトに VirtualLens2 が2つ以上入っています。VCC で入れたものと手動で入れたものが二重になっているときによく出ます。警告に出ているパスのうち、使わない方を削除してください。</span><span data-i18n="254" lang="en">The project contains two or more copies of VirtualLens2. This often happens when a VCC installation and a manual installation coexist. Delete the unused copy at one of the paths listed in the warning.</span></p></div>
+  </details>
+
+  <details class="err"><summary><span data-i18n="255" lang="ja">Modular Avatar の更新を求めるウィンドウが出る</span><span data-i18n="255" lang="en">A window asks you to update Modular Avatar</span></summary>
+    <div class="body"><p><span data-i18n="256" lang="ja">Modular Avatar 1.18.0 以上が必要です。更新してください。</span><span data-i18n="256" lang="en">Modular Avatar 1.18.0 or later is required. Update it to continue.</span></p></div>
   </details>
 </section>
 
 <section id="limits">
-  <h2 class="sec"><span class="num">11</span>制限</h2>
+  <h2 class="sec"><span class="num">12</span><span data-i18n="257" lang="ja">制限</span><span data-i18n="257" lang="en">Limitations</span></h2>
   <ul>
-    <li><strong>PC 専用です。</strong>Quest / iOS 向けのビルドでは、prefab を入れたまま自動的に無効になります</li>
-    <li><strong>VirtualLens2 の非破壊モード専用です</strong></li>
-    <li>VirtualLens2 の置き場所は自由です（<code class="path">Assets/</code> の下であればネストしていても追従します）</li>
-    <li><strong>1つのアバターに1つだけ</strong>入れてください</li>
-    <li>効果は写真とストリーミングカメラにだけ出ます。自分の視界・ミラー・他の人からの見え方は変わりません</li>
-    <li><strong>VirtualLens2 のモニターには映りません。</strong>崩れ方の確認はデフォルトカメラのプレビューでおこなってください</li>
+    <li><span data-i18n="258" lang="ja"><strong>PC 専用です。</strong>Quest / iOS 向けのビルドでは、prefab を入れたまま自動的に無効になります</span><span data-i18n="258" lang="en"><strong>PC only.</strong> The effect is automatically disabled in Quest / iOS builds, so the prefab can stay on the avatar</span></li>
+    <li><span data-i18n="259" lang="ja"><strong>VirtualLens2 の非破壊モード専用です</strong></span><span data-i18n="259" lang="en"><strong>Requires VirtualLens2’s non-destructive mode</strong></span></li>
+    <li><span data-i18n="260" lang="ja">VirtualLens2 の置き場所は自由です（<code class="path">Assets/</code> の下であればネストしていても追従します）</span><span data-i18n="260" lang="en">VirtualLens2 can be placed anywhere under <code class="path">Assets/</code>, including nested folders</span></li>
+    <li><span data-i18n="261" lang="ja"><strong>1つのアバターに2つまで</strong>入れられます（2段の重ねがけ）。3つ以上はビルドが止まります</span><span data-i18n="261" lang="en"><strong>Up to two instances per avatar</strong> for two-stage stacking. Three or more stop the build</span></li>
+    <li><span data-i18n="262" lang="ja">効果は写真とストリーミングカメラにだけ出ます。自分の視界・ミラー・他の人からの見え方は変わりません</span><span data-i18n="262" lang="en">The effect appears only in photos and the streaming camera. It does not change your view, mirrors, or how other people see you</span></li>
+    <li><span data-i18n="263" lang="ja"><strong>VirtualLens2 のモニターには映りません。</strong>崩れ方の確認はデフォルトカメラのプレビューでおこなってください</span><span data-i18n="263" lang="en"><strong>It does not appear on the VirtualLens2 monitor.</strong> Check the default camera preview to see the distortion</span></li>
   </ul>
   <div class="note calm">
-    <span class="label">同期コストについて</span>
-    <p>パラメータは 66 本ありますが、<strong>すべてローカル専用で、同期コストは 0 bit です</strong>（うち 52 本はプリセット4枠の保存用）。他の人には一切送信されません。</p>
+    <span class="label"><span data-i18n="264" lang="ja">同期コストについて</span><span data-i18n="264" lang="en">Sync cost</span></span>
+    <p><span data-i18n="265" lang="ja">パラメータは1つあたり 66 本（2つ入れると 132 本）ありますが、<strong>すべてローカル専用で、同期コストは 0 bit です</strong>（1つあたり、うち 52 本はプリセット4枠の保存用）。他の人には一切送信されません。</span><span data-i18n="265" lang="en">Each instance uses 66 parameters (132 for two instances), but <strong>all are local-only, with a sync cost of 0 bits</strong>. Of those, 52 per instance store the four preset slots. Nothing is sent to other players.</span></p>
   </div>
 </section>
 
 <section id="update">
-  <h2 class="sec"><span class="num">12</span>更新のしかた</h2>
-  <p>バージョンを入れ替えるときは、次の順でお願いします。</p>
+  <h2 class="sec"><span class="num">13</span><span data-i18n="266" lang="ja">更新のしかた</span><span data-i18n="266" lang="en">Updating</span></h2>
+  <p><span data-i18n="267" lang="ja">バージョンを入れ替えるときは、次の順でお願いします。</span><span data-i18n="267" lang="en">To install a different version, follow this order:</span></p>
   <ol class="steps">
-    <li>アバターから Focus Decay Effect を削除</li>
-    <li><code class="path">Assets/FocusDecayEffect</code> フォルダごと削除</li>
-    <li>新しい <code>.unitypackage</code> をインポート</li>
-    <li>prefab を入れ直す</li>
+    <li><span data-i18n="268" lang="ja">アバターから Focus Decay Effect を削除</span><span data-i18n="268" lang="en">Remove Focus Decay Effect from your avatar</span></li>
+    <li><span data-i18n="269" lang="ja"><code class="path">Assets/FocusDecayEffect</code> フォルダごと削除</span><span data-i18n="269" lang="en">Delete the entire <code class="path">Assets/FocusDecayEffect</code> folder</span></li>
+    <li><span data-i18n="270" lang="ja">新しい <code>.unitypackage</code> をインポート</span><span data-i18n="270" lang="en">Import the new <code>.unitypackage</code></span></li>
+    <li><span data-i18n="271" lang="ja">prefab を入れ直す</span><span data-i18n="271" lang="en">Add the prefab again</span></li>
   </ol>
-  <p>ファイルの識別子が変わるため、上書きインポートだけだと参照が切れます。</p>
+  <p><span data-i18n="272" lang="ja">ファイルの識別子が変わるため、上書きインポートだけだと参照が切れます。</span><span data-i18n="272" lang="en">File identifiers change between packages, so importing over the old files can break references.</span></p>
   <div class="note calm">
-    <span class="label">設定の引き継ぎ</span>
-    <p>内部のパラメータ名が変わった項目は、更新すると初期値に戻ります。変わった版は<a href="#changelog">更新履歴</a>に明記します。</p>
+    <span class="label"><span data-i18n="273" lang="ja">設定の引き継ぎ</span><span data-i18n="273" lang="en">Preserving settings</span></span>
+    <p><span data-i18n="274" lang="ja">内部のパラメータ名が変わった項目は、更新すると初期値に戻ります。変わった版は<a href="#changelog">更新履歴</a>に明記します。</span><span data-i18n="274" lang="en">Settings whose internal parameter names have changed return to their defaults after an update. Such changes are noted in the <a href="#changelog">Changelog</a>.</span></p>
   </div>
 </section>
 
 <section id="changelog">
-  <h2 class="sec"><span class="num">13</span>更新履歴</h2>
+  <h2 class="sec"><span class="num">14</span><span data-i18n="275" lang="ja">更新履歴</span><span data-i18n="275" lang="en">Changelog</span></h2>
 
   <div class="rel">
-    <h3>v0.9.4</h3>
-    <span class="when">2026-09-25</span>
-    <h4>追加</h4>
+    <h3><span data-i18n="276" lang="ja">v1.0（最新版）</span><span data-i18n="276" lang="en">v1.0 (latest)</span></h3>
+    <span class="when"><span data-i18n="277" lang="ja">2026-10-02</span><span data-i18n="277" lang="en">2026-10-02</span></span>
+    <h4><span data-i18n="278" lang="ja">追加</span><span data-i18n="278" lang="en">Added</span></h4>
     <ul>
-      <li><strong>Fluid</strong> — 水に溶ける絵の具のように、色がにじんで広がります。Displace がマーブル感のつまみです</li>
-      <li><strong>Glitch</strong> — ランダムな大きさの長方形に切り取られてズレ、色が分離します</li>
+      <li><span data-i18n="release-prefabs" lang="ja">日本語メニューのプレハブを追加（英語メニューのプレハブと選べる）</span><span data-i18n="release-prefabs" lang="en">Added a Japanese-menu prefab; choose either English or Japanese menus.</span></li>
+      <li><span data-i18n="279" lang="ja"><strong>VirtualLens2 のショートカット</strong> — フォーカスディケイ（Focus Decay） のメニューから、VirtualLens2 の <code>F値（Aperture）</code>（F値）・<code>ズーム（Zoom）</code>・<code>AFモード（AF Mode）</code>（ポイントAF（Point AF） / 人物AF（Face AF））を直接操作できるようにしました（<a href="#menu">メニューの場所</a>）</span><span data-i18n="279" lang="en"><strong>VirtualLens2 shortcuts</strong> — control VirtualLens2’s <code>Aperture</code> (f-number), <code>Zoom</code>, and <code>AF Mode</code> (Point AF / Face AF) directly from the Focus Decay menu (see <a href="#menu">Finding the menu</a>)</span></li>
     </ul>
-    <h4>変更</h4>
+    <h4><span data-i18n="280" lang="ja">変更</span><span data-i18n="280" lang="en">Changed</span></h4>
     <ul>
-      <li><strong>エフェクト6種を <code>Effect</code> サブメニューに移しました。</strong>これまで <code>Focus Decay</code> を開いてすぐ並んでいたものが、1階層下がっています。<strong>パラメータ名は変えていないので、保存済みの設定とプリセットはそのまま引き継がれます</strong></li>
-      <li>空いた枠に <strong><code>Intensity</code> と <code>Falloff</code> を root へ昇格</strong>させました。よく使う2つが1タップ浅くなります</li>
-      <li><code>Adjust</code> は残りの6項目（Width / Length / Displace / Merge / Speed / Protect）になりました</li>
+      <li><span data-i18n="281" lang="ja"><strong><code>強さ（Intensity）</code> と <code>効き始め（Falloff）</code> を <code>調整（Adjust）</code> の中へ移しました。</strong>空いた枠に VirtualLens2 のショートカットを置いています</span><span data-i18n="281" lang="en"><strong>Moved <code>Intensity</code> and <code>Falloff</code> into <code>Adjust</code>.</strong> Their previous slots now hold the VirtualLens2 shortcuts</span></li>
     </ul>
-    <h4>修正</h4>
+    <h4><span data-i18n="282" lang="ja">設定の引き継ぎ</span><span data-i18n="282" lang="en">Preserving settings</span></h4>
     <ul>
-      <li>Glitch では Width が二重に掛かっていた（上限側で画面幅を超える板になっていました）</li>
+      <li><span data-i18n="283" lang="ja">パラメータ名は変えていません。<strong>v0.9.4.1 から更新しても、保存済みの設定とプリセットはそのまま引き継がれます</strong></span><span data-i18n="283" lang="en">Parameter names are unchanged. <strong>Saved settings and presets carry over when updating from v0.9.4.1</strong></span></li>
     </ul>
   </div>
 
   <div class="rel">
-    <h3>v0.9.3</h3>
-    <span class="when">2026-09-25</span>
-    <h4>変更</h4>
+    <h3><span data-i18n="284" lang="ja">v0.9.4.1</span><span data-i18n="284" lang="en">v0.9.4.1</span></h3>
+    <span class="when"><span data-i18n="285" lang="ja">2026-09-25</span><span data-i18n="285" lang="en">2026-09-25</span></span>
+    <h4><span data-i18n="286" lang="ja">追加</span><span data-i18n="286" lang="en">Added</span></h4>
     <ul>
-      <li><strong>VirtualLens2 の置き場所が自由になりました。</strong>これまでは <code class="path">Assets/VirtualLens2/</code> に置く必要がありましたが、<code class="path">Assets/</code> の下であれば何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です</li>
-      <li>うまく見つからないときのために <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> を追加しました</li>
+      <li><span data-i18n="287" lang="ja"><strong>エフェクトの重ねがけ</strong> — prefab を2つ入れると、2種類のエフェクトを重ねられます。階層で上が1段目、下が2段目です（<a href="#stack">エフェクトを重ねる</a>）</span><span data-i18n="287" lang="en"><strong>Effect stacking</strong> — add two prefabs to combine two effects. The higher prefab in the hierarchy is stage 1; the lower one is stage 2 (see <a href="#stack">Stacking effects</a>)</span></li>
+      <li><span data-i18n="288" lang="ja">prefab の Inspector に、何段目かを表示するようにしました。3つ目には警告が出ます</span><span data-i18n="288" lang="en">The prefab’s Inspector now shows its stage. A third prefab displays a warning</span></li>
+    </ul>
+    <h4><span data-i18n="289" lang="ja">変更</span><span data-i18n="289" lang="en">Changed</span></h4>
+    <ul>
+      <li><span data-i18n="290" lang="ja">1つのアバターに入れられる数を「1つ」から「2つまで」に広げました。3つ以上はビルド時にエラーで止まります</span><span data-i18n="290" lang="en">Raised the per-avatar limit from one instance to two. Three or more cause a build error</span></li>
+      <li><span data-i18n="291" lang="ja"><strong>チェックを外して無効にした prefab は、メニューにも出なくなりました。</strong>これまでは、無効にしてもメニューだけが残っていました</span><span data-i18n="291" lang="en"><strong>Unchecked, disabled prefabs no longer appear in the menu.</strong> Previously, their menus remained even when disabled</span></li>
+    </ul>
+    <h4><span data-i18n="292" lang="ja">設定の引き継ぎ</span><span data-i18n="292" lang="en">Preserving settings</span></h4>
+    <ul>
+      <li><span data-i18n="293" lang="ja">1つ目の prefab のパラメータ名は変えていません。<strong>v0.9.4 から更新しても、保存済みの設定とプリセットはそのまま引き継がれます</strong></span><span data-i18n="293" lang="en">Parameter names for the first prefab are unchanged. <strong>Saved settings and presets carry over when updating from v0.9.4</strong></span></li>
     </ul>
   </div>
 
   <div class="rel">
-    <h3>v0.9.2</h3>
-    <span class="when">2026-09-24</span>
-    <h4>追加</h4>
+    <h3><span data-i18n="294" lang="ja">v0.9.4</span><span data-i18n="294" lang="en">v0.9.4</span></h3>
+    <span class="when"><span data-i18n="295" lang="ja">2026-09-25</span><span data-i18n="295" lang="en">2026-09-25</span></span>
+    <h4><span data-i18n="296" lang="ja">追加</span><span data-i18n="296" lang="en">Added</span></h4>
     <ul>
-      <li><strong>Reset</strong>（メニューの一番上）— ダイヤル12本を初期値に戻し、エフェクトをオフにします</li>
+      <li><span data-i18n="297" lang="ja"><strong>にじみ溶け（Fluid）</strong> — 水に溶ける絵の具のように、色がにじんで広がります。ずらし量（Displace） がマーブル感のつまみです</span><span data-i18n="297" lang="en"><strong>Fluid</strong> — colours spread like paint dissolving in water. Displace controls the marbling</span></li>
+      <li><span data-i18n="298" lang="ja"><strong>グリッチ（Glitch）</strong> — ランダムな大きさの長方形に切り取られてズレ、色が分離します</span><span data-i18n="298" lang="en"><strong>Glitch</strong> — randomly sized rectangles shift out of place with separated colours</span></li>
     </ul>
-    <h4>修正</h4>
+    <h4><span data-i18n="299" lang="ja">変更</span><span data-i18n="299" lang="en">Changed</span></h4>
     <ul>
-      <li><strong>Blocks の Width がタイルの大きさを変えていなかった。</strong>0 で細かいモザイク、1 で従来と同じ大きさになります</li>
-      <li><strong>Protect が効かない。</strong>少しだけボケた被写体の輪郭に対して、最大でも半分しか効いていませんでした</li>
-      <li><strong>Chroma が見えない。</strong>ずらし量が小さすぎました。約4倍にしています</li>
+      <li><span data-i18n="300" lang="ja"><strong>エフェクト6種を <code>エフェクト（Effect）</code> サブメニューに移しました。</strong>これまで <code>フォーカスディケイ（Focus Decay）</code> を開いてすぐ並んでいたものが、1階層下がっています。<strong>パラメータ名は変えていないので、保存済みの設定とプリセットはそのまま引き継がれます</strong></span><span data-i18n="300" lang="en"><strong>Moved all six effects into the <code>Effect</code> submenu.</strong> They are now one level below <code>Focus Decay</code> instead of appearing immediately. <strong>Parameter names are unchanged, so saved settings and presets carry over</strong></span></li>
+      <li><span data-i18n="301" lang="ja">空いた枠に <strong><code>強さ（Intensity）</code> と <code>効き始め（Falloff）</code> を root へ昇格</strong>させました。よく使う2つが1タップ浅くなります</span><span data-i18n="301" lang="en"><strong>Promoted <code>Intensity</code> and <code>Falloff</code> to the root menu</strong> using the freed slots. These frequently used controls now take one fewer tap to reach</span></li>
+      <li><span data-i18n="302" lang="ja"><code>調整（Adjust）</code> は残りの6項目（幅（Width） / 長さ（Length） / ずらし量（Displace） / なじませ（Merge） / 変化の速さ（Speed） / 被写体保護（Protect））になりました</span><span data-i18n="302" lang="en"><code>Adjust</code> now contains the remaining six controls (Width / Length / Displace / Merge / Speed / Protect)</span></li>
     </ul>
-    <h4>変更</h4>
+    <h4><span data-i18n="303" lang="ja">修正</span><span data-i18n="303" lang="en">Fixed</span></h4>
     <ul>
-      <li>Protect の初期値を 0.5 → <strong>0</strong> に。既定では被写体が引きずられます</li>
-    </ul>
-  </div>
-
-  <div class="rel">
-    <h3>v0.9.1</h3>
-    <span class="when">2026-09-23</span>
-    <h4>変更</h4>
-    <ul>
-      <li>メニューを <code>VirtualLens2 ▸ Effects ▸ Focus Decay</code> に移動</li>
-      <li>Adjust / Colour / Presets の3グループに整理</li>
-      <li><strong>Opacity → Intensity に改名</strong>（このため保存していた設定はリセットされます）</li>
-    </ul>
-    <h4>追加</h4>
-    <ul>
-      <li><strong>Merge</strong> — 隣の崩れと引っ張り合って隙間を埋める</li>
-      <li><strong>Speed</strong> — 崩れ方の抽選速度。0 で停止</li>
-      <li><strong>Bleed</strong> — 色が裂けた向きに滲む</li>
-      <li><strong>Protect</strong> — 被写体が背景へコピーされるのを防ぐ</li>
-      <li><strong>Presets</strong> — 設定を4つ保存／呼び出し（同期コストは 0 bit のまま）</li>
-    </ul>
-    <h4>修正</h4>
-    <ul>
-      <li>Drip Down で被写体が二重に写る問題</li>
-      <li>Falloff の右半分が効いていなかった</li>
-      <li>VirtualLens2 の解像度を 1440p 以上にすると崩れる範囲が狭くなっていた</li>
+      <li><span data-i18n="304" lang="ja">グリッチ（Glitch） では 幅（Width） が二重に掛かっていた（上限側で画面幅を超える板になっていました）</span><span data-i18n="304" lang="en">Width was applied twice in Glitch, producing slabs wider than the screen at high values</span></li>
     </ul>
   </div>
 
   <div class="rel">
-    <h3>v0.9.0</h3>
-    <span class="when">2026-09-17</span>
+    <h3><span data-i18n="305" lang="ja">v0.9.3</span><span data-i18n="305" lang="en">v0.9.3</span></h3>
+    <span class="when"><span data-i18n="306" lang="ja">2026-09-25</span><span data-i18n="306" lang="en">2026-09-25</span></span>
+    <h4><span data-i18n="307" lang="ja">変更</span><span data-i18n="307" lang="en">Changed</span></h4>
     <ul>
-      <li>初版</li>
+      <li><span data-i18n="308" lang="ja"><strong>VirtualLens2 の置き場所が自由になりました。</strong>これまでは <code class="path">Assets/VirtualLens2/</code> に置く必要がありましたが、<code class="path">Assets/</code> の下であれば何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です</span><span data-i18n="308" lang="en"><strong>VirtualLens2 can now be placed anywhere.</strong> Previously it had to be in <code class="path">Assets/VirtualLens2/</code>. It is now found automatically anywhere under <code class="path">Assets/</code>, including deeply nested folders, and can be moved later</span></li>
+      <li><span data-i18n="309" lang="ja">うまく見つからないときのために <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> を追加しました</span><span data-i18n="309" lang="en">Added <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> for cases where automatic detection fails</span></li>
+    </ul>
+  </div>
+
+  <div class="rel">
+    <h3><span data-i18n="310" lang="ja">v0.9.2</span><span data-i18n="310" lang="en">v0.9.2</span></h3>
+    <span class="when"><span data-i18n="311" lang="ja">2026-09-24</span><span data-i18n="311" lang="en">2026-09-24</span></span>
+    <h4><span data-i18n="312" lang="ja">追加</span><span data-i18n="312" lang="en">Added</span></h4>
+    <ul>
+      <li><span data-i18n="313" lang="ja"><strong>リセット（Reset）</strong>（メニューの一番上）— ダイヤル12本を初期値に戻し、エフェクトをオフにします</span><span data-i18n="313" lang="en"><strong>Reset</strong> (at the top of the menu) — restores all twelve dials to their defaults and turns the effect off</span></li>
+    </ul>
+    <h4><span data-i18n="314" lang="ja">修正</span><span data-i18n="314" lang="en">Fixed</span></h4>
+    <ul>
+      <li><span data-i18n="315" lang="ja"><strong>ブロック（Blocks） の 幅（Width） がタイルの大きさを変えていなかった。</strong>0 で細かいモザイク、1 で従来と同じ大きさになります</span><span data-i18n="315" lang="en"><strong>Width in Blocks did not change tile size.</strong> It now ranges from a fine mosaic at 0 to the previous tile size at 1</span></li>
+      <li><span data-i18n="316" lang="ja"><strong>被写体保護（Protect） が効かない。</strong>少しだけボケた被写体の輪郭に対して、最大でも半分しか効いていませんでした</span><span data-i18n="316" lang="en"><strong>Protect was ineffective.</strong> Even at maximum, it was only half effective on slightly blurred subject edges</span></li>
+      <li><span data-i18n="317" lang="ja"><strong>色ずれ（Chroma） が見えない。</strong>ずらし量が小さすぎました。約4倍にしています</span><span data-i18n="317" lang="en"><strong>Chroma was barely visible.</strong> The offset was too small; it is now about four times larger</span></li>
+    </ul>
+    <h4><span data-i18n="318" lang="ja">変更</span><span data-i18n="318" lang="en">Changed</span></h4>
+    <ul>
+      <li><span data-i18n="319" lang="ja">被写体保護（Protect） の初期値を 0.5 → <strong>0</strong> に。既定では被写体が引きずられます</span><span data-i18n="319" lang="en">Changed the Protect default from 0.5 to <strong>0</strong>. The subject is now dragged by default</span></li>
+    </ul>
+  </div>
+
+  <div class="rel">
+    <h3><span data-i18n="320" lang="ja">v0.9.1</span><span data-i18n="320" lang="en">v0.9.1</span></h3>
+    <span class="when"><span data-i18n="321" lang="ja">2026-09-23</span><span data-i18n="321" lang="en">2026-09-23</span></span>
+    <h4><span data-i18n="322" lang="ja">変更</span><span data-i18n="322" lang="en">Changed</span></h4>
+    <ul>
+      <li><span data-i18n="323" lang="ja">メニューを <code>VirtualLens2 ▸ Effects ▸ フォーカスディケイ（Focus Decay）</code> に移動</span><span data-i18n="323" lang="en">Moved the menu to <code>VirtualLens2 ▸ Effects ▸ Focus Decay</code></span></li>
+      <li><span data-i18n="324" lang="ja">調整（Adjust） / 色（Colour） / プリセット（Presets） の3グループに整理</span><span data-i18n="324" lang="en">Organised controls into three groups: Adjust / Colour / Presets</span></li>
+      <li><span data-i18n="325" lang="ja"><strong>Opacity → 強さ（Intensity） に改名</strong>（このため保存していた設定はリセットされます）</span><span data-i18n="325" lang="en"><strong>Renamed Opacity to Intensity</strong> (this resets previously saved settings)</span></li>
+    </ul>
+    <h4><span data-i18n="326" lang="ja">追加</span><span data-i18n="326" lang="en">Added</span></h4>
+    <ul>
+      <li><span data-i18n="327" lang="ja"><strong>なじませ（Merge）</strong> — 隣の崩れと引っ張り合って隙間を埋める</span><span data-i18n="327" lang="en"><strong>Merge</strong> — pulls neighbouring distortions together to fill gaps</span></li>
+      <li><span data-i18n="328" lang="ja"><strong>変化の速さ（Speed）</strong> — 崩れ方の抽選速度。0 で停止</span><span data-i18n="328" lang="en"><strong>Speed</strong> — controls how often the distortion pattern is randomised; 0 freezes it</span></li>
+      <li><span data-i18n="329" lang="ja"><strong>色にじみ（Bleed）</strong> — 色が裂けた向きに滲む</span><span data-i18n="329" lang="en"><strong>Bleed</strong> — colours bleed along the direction of the breaks</span></li>
+      <li><span data-i18n="330" lang="ja"><strong>被写体保護（Protect）</strong> — 被写体が背景へコピーされるのを防ぐ</span><span data-i18n="330" lang="en"><strong>Protect</strong> — prevents the subject from being copied into the background</span></li>
+      <li><span data-i18n="331" lang="ja"><strong>プリセット（Presets）</strong> — 設定を4つ保存／呼び出し（同期コストは 0 bit のまま）</span><span data-i18n="331" lang="en"><strong>Presets</strong> — save and load four setups (sync cost remains 0 bits)</span></li>
+    </ul>
+    <h4><span data-i18n="332" lang="ja">修正</span><span data-i18n="332" lang="en">Fixed</span></h4>
+    <ul>
+      <li><span data-i18n="333" lang="ja">したたり（下）（Drip Down） で被写体が二重に写る問題</span><span data-i18n="333" lang="en">Duplicate subject images in Drip Down</span></li>
+      <li><span data-i18n="334" lang="ja">効き始め（Falloff） の右半分が効いていなかった</span><span data-i18n="334" lang="en">The upper half of the Falloff dial had no effect</span></li>
+      <li><span data-i18n="335" lang="ja">VirtualLens2 の解像度を 1440p 以上にすると崩れる範囲が狭くなっていた</span><span data-i18n="335" lang="en">The affected area shrank at VirtualLens2 resolutions of 1440p and above</span></li>
+    </ul>
+  </div>
+
+  <div class="rel">
+    <h3><span data-i18n="336" lang="ja">v0.9.0</span><span data-i18n="336" lang="en">v0.9.0</span></h3>
+    <span class="when"><span data-i18n="337" lang="ja">2026-09-17</span><span data-i18n="337" lang="en">2026-09-17</span></span>
+    <ul>
+      <li><span data-i18n="338" lang="ja">初版</span><span data-i18n="338" lang="en">Initial release</span></li>
     </ul>
   </div>
 </section>
 
 <section id="terms">
-  <h2 class="sec"><span class="num">14</span>利用規約</h2>
-  <p>本ツールの利用によって生じたいかなる請求や損害、その他の義務について、作者は一切の責任を負わないものとします。</p>
-  <p><strong>改変の有無によらず、本ツールの一部またはすべてを再配布することを禁じます。</strong></p>
-  <p><strong>本ツールを使用して生成したコンポーネントを含むアバターを、第三者が利用可能な状態にすることを禁じます。</strong>（例: public アバターとしてのアップロードや Prefab の配布など）</p>
+  <h2 class="sec"><span class="num">15</span><span data-i18n="339" lang="ja">利用規約</span><span data-i18n="339" lang="en">Terms of use</span></h2>
+  <p><span data-i18n="340" lang="ja">本ツールの利用によって生じたいかなる請求や損害、その他の義務について、作者は一切の責任を負わないものとします。</span><span data-i18n="340" lang="en">The author accepts no liability for any claims, damages, or other obligations arising from use of this tool.</span></p>
+  <p><span data-i18n="341" lang="ja"><strong>改変の有無によらず、本ツールの一部またはすべてを再配布することを禁じます。</strong></span><span data-i18n="341" lang="en"><strong>Redistribution of any part or all of this tool is prohibited, whether modified or unmodified.</strong></span></p>
+  <p><span data-i18n="342" lang="ja"><strong>本ツールを使用して生成したコンポーネントを含むアバターを、第三者が利用可能な状態にすることを禁じます。</strong>（例: public アバターとしてのアップロードや Prefab の配布など）</span><span data-i18n="342" lang="en"><strong>You may not make an avatar containing components generated by this tool available for use by third parties.</strong> Examples include uploading it as a public avatar or distributing its prefab.</span></p>
 
-  <h3>できること</h3>
+  <h3><span data-i18n="343" lang="ja">できること</span><span data-i18n="343" lang="en">Permitted uses</span></h3>
   <ul>
-    <li>本ツールを導入したアバターを、自分用（private）としてアップロードすること</li>
-    <li>本ツールで撮影した写真を、個人・商用を問わず公開すること</li>
-    <li>自分の用途に合わせて本ツールを改変して使うこと（再配布は上記のとおり禁止）</li>
+    <li><span data-i18n="344" lang="ja">本ツールを導入したアバターを、自分用（private）としてアップロードすること</span><span data-i18n="344" lang="en">Upload an avatar containing this tool for your own use as a private avatar</span></li>
+    <li><span data-i18n="345" lang="ja">本ツールで撮影した写真を、個人・商用を問わず公開すること</span><span data-i18n="345" lang="en">Publish photos taken with this tool for personal or commercial purposes</span></li>
+    <li><span data-i18n="346" lang="ja">自分の用途に合わせて本ツールを改変して使うこと（再配布は上記のとおり禁止）</span><span data-i18n="346" lang="en">Modify this tool for your own use (redistribution remains prohibited as stated above)</span></li>
   </ul>
 
-  <h3>VirtualLens2 について</h3>
-  <p>本ツールは VirtualLens2（ろじらぼ様）を前提としています。ご利用にあたっては、<a href="https://vlens2.logilabo.dev/ja/docs/readme/" target="_blank" rel="noopener">VirtualLens2 の利用規約</a>もあわせてお守りください。</p>
-  <p><strong>本ツールには VirtualLens2 のファイルは一切含まれていません。</strong>VirtualLens2 は別途ご購入・ご用意ください。</p>
+  <h3><span data-i18n="347" lang="ja">VirtualLens2 について</span><span data-i18n="347" lang="en">About VirtualLens2</span></h3>
+  <p><span data-i18n="348" lang="ja">本ツールは VirtualLens2（ろじらぼ様）を前提としています。ご利用にあたっては、<a href="https://vlens2.logilabo.dev/ja/docs/readme/" target="_blank" rel="noopener">VirtualLens2 の利用規約</a>もあわせてお守りください。</span><span data-i18n="348" lang="en">This tool requires VirtualLens2 by Logilabo. You must also comply with the <a href="https://vlens2.logilabo.dev/ja/docs/readme/" target="_blank" rel="noopener">VirtualLens2 terms of use</a>.</span></p>
+  <p><span data-i18n="349" lang="ja"><strong>本ツールには VirtualLens2 のファイルは一切含まれていません。</strong>VirtualLens2 は別途ご購入・ご用意ください。</span><span data-i18n="349" lang="en"><strong>No VirtualLens2 files are included in this tool.</strong> Purchase or obtain VirtualLens2 separately.</span></p>
   <div class="note">
-    <span class="label">配布について</span>
-    <p><strong>本ツールの配布にあたっては、VirtualLens2 の作者であるろじらぼ様に事前にご相談し、許可をいただいています。</strong></p>
-    <p>素晴らしいツールを公開してくださっていることに、あらためて感謝申し上げます。</p>
+    <span class="label"><span data-i18n="350" lang="ja">配布について</span><span data-i18n="350" lang="en">Distribution permission</span></span>
+    <p><span data-i18n="351" lang="ja"><strong>本ツールの配布にあたっては、VirtualLens2 の作者であるろじらぼ様に事前にご相談し、許可をいただいています。</strong></span><span data-i18n="351" lang="en"><strong>Before distributing this tool, the author consulted Logilabo, the creator of VirtualLens2, and received permission.</strong></span></p>
+    <p><span data-i18n="352" lang="ja">素晴らしいツールを公開してくださっていることに、あらためて感謝申し上げます。</span><span data-i18n="352" lang="en">Many thanks to Logilabo for making such a wonderful tool available.</span></p>
   </div>
 
   <div class="note calm">
-    <span class="label">同梱ファイルとの関係</span>
-    <p>同じ内容をパッケージ同梱の <code>LICENSE.md</code> にも収録しています。記載に相違があった場合は、<strong>同梱ファイルの内容を優先します。</strong></p>
+    <span class="label"><span data-i18n="353" lang="ja">同梱ファイルとの関係</span><span data-i18n="353" lang="en">Packaged licence</span></span>
+    <p><span data-i18n="354" lang="ja">同じ内容をパッケージ同梱の <code>LICENSE.md</code> にも収録しています。記載に相違があった場合は、<strong>同梱ファイルの内容を優先します。</strong></span><span data-i18n="354" lang="en">These terms are also included in the package’s <code>LICENSE.md</code>. If there is any discrepancy, <strong>the packaged file takes precedence.</strong> This is a translation. If it differs from the Japanese terms, the Japanese version (<code>LICENSE.md</code>) prevails.</span></p>
   </div>
 </section>
 
 <section id="contact">
-  <h2 class="sec"><span class="num">15</span>連絡先</h2>
-  <p>不具合のご報告、ご要望などありましたらお気軽にご連絡ください。本ギミックは随時アップデートする予定です。</p>
+  <h2 class="sec"><span class="num">16</span><span data-i18n="355" lang="ja">連絡先</span><span data-i18n="355" lang="en">Contact</span></h2>
+  <p><span data-i18n="356" lang="ja">不具合のご報告、ご要望などありましたらお気軽にご連絡ください。本ギミックは随時アップデートする予定です。</span><span data-i18n="356" lang="en">Feel free to get in touch with bug reports or requests. Updates to this effect are planned on an ongoing basis.</span></p>
   <ul>
-    <li>作者: <strong>YutanpopoZzz</strong></li>
-    <li>X: <a href="https://x.com/YutanpopoZzz" target="_blank" rel="noopener">@YutanpopoZzz</a></li>
-    <li>Discord: <code>yutanpopo</code></li>
+    <li><span data-i18n="357" lang="ja">作者: <strong>YutanpopoZzz</strong></span><span data-i18n="357" lang="en">Author: <strong>YutanpopoZzz</strong></span></li>
+    <li><span data-i18n="358" lang="ja">X: <a href="https://x.com/YutanpopoZzz" target="_blank" rel="noopener">@YutanpopoZzz</a></span><span data-i18n="358" lang="en">X: <a href="https://x.com/YutanpopoZzz" target="_blank" rel="noopener">@YutanpopoZzz</a></span></li>
+    <li><span data-i18n="359" lang="ja">Discord: <code>yutanpopo</code></span><span data-i18n="359" lang="en">Discord: <code>yutanpopo</code></span></li>
   </ul>
   <div class="note calm">
-    <span class="label">お問い合わせのときに</span>
-    <p>Unity のバージョン、VirtualLens2 のバージョン、Console に出ているエラー文をあわせてお伝えいただけると、こちらで再現しやすく助かります。</p>
+    <span class="label"><span data-i18n="360" lang="ja">お問い合わせのときに</span><span data-i18n="360" lang="en">When contacting the author</span></span>
+    <p><span data-i18n="361" lang="ja">Unity のバージョン、VirtualLens2 のバージョン、Console に出ているエラー文をあわせてお伝えいただけると、こちらで再現しやすく助かります。</span><span data-i18n="361" lang="en">Please include your Unity version, VirtualLens2 version, and any error text from the Console. This helps the author reproduce the issue.</span></p>
   </div>
 </section>
 
 <footer>
-  <p>Focus Decay Effect — VRChat avatar gimmick by YutanpopoZzz<br>
-  このページは最新版の説明書です。内容は予告なく更新されます。</p>
+  <p><span data-i18n="362" lang="ja">Focus Decay Effect — VRChat avatar gimmick by YutanpopoZzz<br>
+  このページは最新版の説明書です。内容は予告なく更新されます。</span><span data-i18n="362" lang="en">Focus Decay Effect — VRChat avatar gimmick by YutanpopoZzz<br>This page documents the latest version. Its contents may change without notice.</span></p>
 </footer>
 
 </main>
@@ -703,6 +878,26 @@ footer a{color:var(--dim)}
   var apply = function (m) { toc.open = m.matches; };
   apply(wide);
   wide.addEventListener ? wide.addEventListener('change', apply) : wide.addListener(apply);
+})();
+
+// Light up the table-of-contents entry for the section being read.
+(function () {
+  var links = document.querySelectorAll('nav a[href^="#"]');
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      links.forEach(function (a) { a.classList.remove('on'); });
+      var a = byId[e.target.id];
+      if (a) a.classList.add('on');
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  Object.keys(byId).forEach(function (id) {
+    var s = document.getElementById(id);
+    if (s) io.observe(s);
+  });
 })();
 </script>
 
