@@ -179,8 +179,15 @@ table.modes td.odd{background:rgba(255,51,102,.07)}
 /* changelog */
 .rel{border-left:1px solid var(--line);padding:0 0 4px 22px;margin:0 0 30px;position:relative}
 .rel::before{content:"";position:absolute;left:-4px;top:9px;width:7px;height:7px;background:var(--accent);border-radius:50%}
-.rel h3{margin:0 0 4px;font-family:var(--mono);font-size:1rem}
-.rel .when{font-family:var(--mono);font-size:.76rem;color:var(--faint);display:block;margin-bottom:12px}
+.rel summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
+.rel summary::-webkit-details-marker{display:none}
+.rel summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.rel h3{margin:0;font-family:var(--mono);font-size:1rem}
+.rel h3::before{content:"▸ ";color:var(--accent)}
+.rel[open] h3::before{content:"▾ "}
+.rel .when{font-family:var(--mono);font-size:.76rem;color:var(--faint)}
+.rel[open] summary{margin-bottom:12px}
+.rel:not([open]){margin-bottom:16px}
 .rel h4{font-size:.82rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:16px 0 6px}
 .rel ul{margin:0;padding-left:1.2em;color:var(--dim)}
 
@@ -714,9 +721,8 @@ body{overflow-wrap:break-word}
 <section id="changelog">
   <h2 class="sec"><span class="num">14</span><span data-i18n="275" lang="ja">更新履歴</span><span data-i18n="275" lang="en">Changelog</span></h2>
 
-  <div class="rel">
-    <h3><span data-i18n="276" lang="ja">v1.0（最新版）</span><span data-i18n="276" lang="en">v1.0 (latest)</span></h3>
-    <span class="when"><span data-i18n="277" lang="ja">2026-10-02</span><span data-i18n="277" lang="en">2026-10-02</span></span>
+  <details class="rel" open>
+    <summary><h3><span data-i18n="276" lang="ja">v1.0（最新版）</span><span data-i18n="276" lang="en">v1.0 (latest)</span></h3><span class="when"><span data-i18n="277" lang="ja">2026-10-02</span><span data-i18n="277" lang="en">2026-10-02</span></span></summary>
     <h4><span data-i18n="278" lang="ja">追加</span><span data-i18n="278" lang="en">Added</span></h4>
     <ul>
       <li><span data-i18n="release-prefabs" lang="ja">日本語メニューのプレハブを追加（英語メニューのプレハブと選べる）</span><span data-i18n="release-prefabs" lang="en">Added a Japanese-menu prefab; choose either English or Japanese menus.</span></li>
@@ -730,11 +736,10 @@ body{overflow-wrap:break-word}
     <ul>
       <li><span data-i18n="283" lang="ja">パラメータ名は変えていません。<strong>v0.9.4.1 から更新しても、保存済みの設定とプリセットはそのまま引き継がれます</strong></span><span data-i18n="283" lang="en">Parameter names are unchanged. <strong>Saved settings and presets carry over when updating from v0.9.4.1</strong></span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="284" lang="ja">v0.9.4.1</span><span data-i18n="284" lang="en">v0.9.4.1</span></h3>
-    <span class="when"><span data-i18n="285" lang="ja">2026-09-25</span><span data-i18n="285" lang="en">2026-09-25</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="284" lang="ja">v0.9.4.1</span><span data-i18n="284" lang="en">v0.9.4.1</span></h3><span class="when"><span data-i18n="285" lang="ja">2026-09-25</span><span data-i18n="285" lang="en">2026-09-25</span></span></summary>
     <h4><span data-i18n="286" lang="ja">追加</span><span data-i18n="286" lang="en">Added</span></h4>
     <ul>
       <li><span data-i18n="287" lang="ja"><strong>エフェクトの重ねがけ</strong> — prefab を2つ入れると、2種類のエフェクトを重ねられます。階層で上が1段目、下が2段目です（<a href="#stack">エフェクトを重ねる</a>）</span><span data-i18n="287" lang="en"><strong>Effect stacking</strong> — add two prefabs to combine two effects. The higher prefab in the hierarchy is stage 1; the lower one is stage 2 (see <a href="#stack">Stacking effects</a>)</span></li>
@@ -749,11 +754,10 @@ body{overflow-wrap:break-word}
     <ul>
       <li><span data-i18n="293" lang="ja">1つ目の prefab のパラメータ名は変えていません。<strong>v0.9.4 から更新しても、保存済みの設定とプリセットはそのまま引き継がれます</strong></span><span data-i18n="293" lang="en">Parameter names for the first prefab are unchanged. <strong>Saved settings and presets carry over when updating from v0.9.4</strong></span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="294" lang="ja">v0.9.4</span><span data-i18n="294" lang="en">v0.9.4</span></h3>
-    <span class="when"><span data-i18n="295" lang="ja">2026-09-25</span><span data-i18n="295" lang="en">2026-09-25</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="294" lang="ja">v0.9.4</span><span data-i18n="294" lang="en">v0.9.4</span></h3><span class="when"><span data-i18n="295" lang="ja">2026-09-25</span><span data-i18n="295" lang="en">2026-09-25</span></span></summary>
     <h4><span data-i18n="296" lang="ja">追加</span><span data-i18n="296" lang="en">Added</span></h4>
     <ul>
       <li><span data-i18n="297" lang="ja"><strong>にじみ溶け（Fluid）</strong> — 水に溶ける絵の具のように、色がにじんで広がります。ずらし量（Displace） がマーブル感のつまみです</span><span data-i18n="297" lang="en"><strong>Fluid</strong> — colours spread like paint dissolving in water. Displace controls the marbling</span></li>
@@ -769,21 +773,19 @@ body{overflow-wrap:break-word}
     <ul>
       <li><span data-i18n="304" lang="ja">グリッチ（Glitch） では 幅（Width） が二重に掛かっていた（上限側で画面幅を超える板になっていました）</span><span data-i18n="304" lang="en">Width was applied twice in Glitch, producing slabs wider than the screen at high values</span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="305" lang="ja">v0.9.3</span><span data-i18n="305" lang="en">v0.9.3</span></h3>
-    <span class="when"><span data-i18n="306" lang="ja">2026-09-25</span><span data-i18n="306" lang="en">2026-09-25</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="305" lang="ja">v0.9.3</span><span data-i18n="305" lang="en">v0.9.3</span></h3><span class="when"><span data-i18n="306" lang="ja">2026-09-25</span><span data-i18n="306" lang="en">2026-09-25</span></span></summary>
     <h4><span data-i18n="307" lang="ja">変更</span><span data-i18n="307" lang="en">Changed</span></h4>
     <ul>
       <li><span data-i18n="308" lang="ja"><strong>VirtualLens2 の置き場所が自由になりました。</strong>これまでは <code class="path">Assets/VirtualLens2/</code> に置く必要がありましたが、<code class="path">Assets/</code> の下であれば何階層ネストしていても自動で追いかけます。あとから移動しても大丈夫です</span><span data-i18n="308" lang="en"><strong>VirtualLens2 can now be placed anywhere.</strong> Previously it had to be in <code class="path">Assets/VirtualLens2/</code>. It is now found automatically anywhere under <code class="path">Assets/</code>, including deeply nested folders, and can be moved later</span></li>
       <li><span data-i18n="309" lang="ja">うまく見つからないときのために <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> を追加しました</span><span data-i18n="309" lang="en">Added <code>Tools ▸ Focus Decay ▸ Locate VirtualLens2</code> for cases where automatic detection fails</span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="310" lang="ja">v0.9.2</span><span data-i18n="310" lang="en">v0.9.2</span></h3>
-    <span class="when"><span data-i18n="311" lang="ja">2026-09-24</span><span data-i18n="311" lang="en">2026-09-24</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="310" lang="ja">v0.9.2</span><span data-i18n="310" lang="en">v0.9.2</span></h3><span class="when"><span data-i18n="311" lang="ja">2026-09-24</span><span data-i18n="311" lang="en">2026-09-24</span></span></summary>
     <h4><span data-i18n="312" lang="ja">追加</span><span data-i18n="312" lang="en">Added</span></h4>
     <ul>
       <li><span data-i18n="313" lang="ja"><strong>リセット（Reset）</strong>（メニューの一番上）— ダイヤル12本を初期値に戻し、エフェクトをオフにします</span><span data-i18n="313" lang="en"><strong>Reset</strong> (at the top of the menu) — restores all twelve dials to their defaults and turns the effect off</span></li>
@@ -798,11 +800,10 @@ body{overflow-wrap:break-word}
     <ul>
       <li><span data-i18n="319" lang="ja">被写体保護（Protect） の初期値を 0.5 → <strong>0</strong> に。既定では被写体が引きずられます</span><span data-i18n="319" lang="en">Changed the Protect default from 0.5 to <strong>0</strong>. The subject is now dragged by default</span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="320" lang="ja">v0.9.1</span><span data-i18n="320" lang="en">v0.9.1</span></h3>
-    <span class="when"><span data-i18n="321" lang="ja">2026-09-23</span><span data-i18n="321" lang="en">2026-09-23</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="320" lang="ja">v0.9.1</span><span data-i18n="320" lang="en">v0.9.1</span></h3><span class="when"><span data-i18n="321" lang="ja">2026-09-23</span><span data-i18n="321" lang="en">2026-09-23</span></span></summary>
     <h4><span data-i18n="322" lang="ja">変更</span><span data-i18n="322" lang="en">Changed</span></h4>
     <ul>
       <li><span data-i18n="323" lang="ja">メニューを <code>VirtualLens2 ▸ Effects ▸ フォーカスディケイ（Focus Decay）</code> に移動</span><span data-i18n="323" lang="en">Moved the menu to <code>VirtualLens2 ▸ Effects ▸ Focus Decay</code></span></li>
@@ -823,15 +824,14 @@ body{overflow-wrap:break-word}
       <li><span data-i18n="334" lang="ja">効き始め（Falloff） の右半分が効いていなかった</span><span data-i18n="334" lang="en">The upper half of the Falloff dial had no effect</span></li>
       <li><span data-i18n="335" lang="ja">VirtualLens2 の解像度を 1440p 以上にすると崩れる範囲が狭くなっていた</span><span data-i18n="335" lang="en">The affected area shrank at VirtualLens2 resolutions of 1440p and above</span></li>
     </ul>
-  </div>
+  </details>
 
-  <div class="rel">
-    <h3><span data-i18n="336" lang="ja">v0.9.0</span><span data-i18n="336" lang="en">v0.9.0</span></h3>
-    <span class="when"><span data-i18n="337" lang="ja">2026-09-17</span><span data-i18n="337" lang="en">2026-09-17</span></span>
+  <details class="rel">
+    <summary><h3><span data-i18n="336" lang="ja">v0.9.0</span><span data-i18n="336" lang="en">v0.9.0</span></h3><span class="when"><span data-i18n="337" lang="ja">2026-09-17</span><span data-i18n="337" lang="en">2026-09-17</span></span></summary>
     <ul>
       <li><span data-i18n="338" lang="ja">初版</span><span data-i18n="338" lang="en">Initial release</span></li>
     </ul>
-  </div>
+  </details>
 </section>
 
 <section id="terms">
