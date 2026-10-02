@@ -144,6 +144,10 @@ dl.dials dd strong{color:var(--fg);font-weight:600}
 
 /* tables: the mode grid is wider than a phone, so it scrolls inside its own box
    rather than pushing the page sideways */
+.shot{margin:0 0 28px}
+.shot a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.shot img{display:block;width:100%;height:auto}
+.shot figcaption{margin-top:8px;font-size:.88rem;color:var(--dim)}
 .tbl{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:8px;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.6}
 th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
@@ -423,6 +427,10 @@ body{overflow-wrap:break-word}
 <section id="effects">
   <h2 class="sec"><span class="num">05</span><span data-i18n="81" lang="ja">エフェクト6種</span><span data-i18n="81" lang="en">Six effects</span></h2>
   <p><span data-i18n="82" lang="ja"><code>エフェクト（Effect）</code> の中にあります。6つのうち1つを選ぶと ON になります。すべて消灯させると OFF です。</span><span data-i18n="82" lang="en">Open <code>Effect</code> and select one of the six modes to turn it on. Turn all of them off to disable the effect.</span></p>
+  <figure class="shot">
+    <a href="images/effects.jpg"><img src="images/effects.jpg" width="2000" height="2000" loading="lazy" alt="6種のエフェクトの見本 / Samples of the six effects"></a>
+    <figcaption><span data-i18n="fig-effects" lang="ja">テスト用の図柄に実際にかけた出力です。オレンジの人型がピントの合った被写体です。崩れるのはその外側で、人型そのものは崩れません。画像をタップすると拡大できます。</span><span data-i18n="fig-effects" lang="en">Actual output on a test pattern. The orange figure is the in-focus subject; the area around it breaks apart while the figure itself stays intact. Labels in the image are in Japanese. Tap to enlarge.</span></figcaption>
+  </figure>
   <div class="tbl">
     <table>
       <thead><tr><th><span data-i18n="83" lang="ja">エフェクト</span><span data-i18n="83" lang="en">Effect</span></th><th><span data-i18n="84" lang="ja">崩れ方</span><span data-i18n="84" lang="en">Appearance</span></th><th><span data-i18n="85" lang="ja">性格が変わるダイヤル</span><span data-i18n="85" lang="en">Dials with mode-specific behaviour</span></th></tr></thead>
@@ -486,6 +494,10 @@ body{overflow-wrap:break-word}
   </div>
 
 <p><span data-i18n="adjust-v1" lang="ja">調整（Adjust）には8つのダイヤルがあります。よく使う2つから説明します。</span><span data-i18n="adjust-v1" lang="en">Adjust holds eight dials. The two you will reach for most come first.</span></p>
+  <figure class="shot">
+    <a href="images/dials-adjust.jpg"><img src="images/dials-adjust.jpg" width="2000" height="2000" loading="lazy" alt="調整（Adjust）のダイヤルの見本 / Samples of the Adjust dials"></a>
+    <figcaption><span data-i18n="fig-adjust" lang="ja">各ダイヤルを低い値（LOW）と高い値（HIGH）にしたときの比較です。見やすいモードで比べています。効き始め（Falloff）は、人型のあたりが近く、画面の左右の端へ行くほど遠くなる背景で比べています。変化の速さ（Speed）は動きなので、静止画では比較していません。</span><span data-i18n="fig-adjust" lang="en">Each dial at a low (LOW) and high (HIGH) value, compared in the mode where it shows most clearly. Falloff is compared on a background that is close near the figure and gets farther away toward the left and right edges. Speed is about motion, so it is not compared as a still image. Labels in the image are in Japanese.</span></figcaption>
+  </figure>
   <h3><span data-i18n="164" lang="ja">よく使う2つ</span><span data-i18n="164" lang="en">The two most-used dials</span></h3>
   <dl class="dials">
     <dt><span data-i18n="165" lang="ja">強さ（Intensity）</span><span data-i18n="165" lang="en">Intensity</span></dt>
@@ -524,6 +536,10 @@ body{overflow-wrap:break-word}
 
 <section id="colour">
   <h2 class="sec"><span class="num">07</span><span data-i18n="182" lang="ja">色（Colour）</span><span data-i18n="182" lang="en">Colour</span></h2>
+  <figure class="shot">
+    <a href="images/dials-colour.jpg"><img src="images/dials-colour.jpg" width="2000" height="2000" loading="lazy" alt="色（Colour）のダイヤルの見本 / Samples of the Colour dials"></a>
+    <figcaption><span data-i18n="fig-colour" lang="ja">各ダイヤルを低い値（LOW）と高い値（HIGH）にしたときの比較です。減色（Posterize）は白黒の図柄では差が出ないため、灰色のグラデーションで比べています。</span><span data-i18n="fig-colour" lang="en">Each dial at a low (LOW) and high (HIGH) value. Posterize shows no difference on a black-and-white pattern, so it is compared on a grey gradient. Labels in the image are in Japanese.</span></figcaption>
+  </figure>
   <dl class="dials">
     <dt><span data-i18n="183" lang="ja">色ずれ（Chroma）</span><span data-i18n="183" lang="en">Chroma</span></dt>
     <dd><span data-i18n="184" lang="ja">赤と青を、崩れた向きの前後から取ってくる量。<strong>輪郭のある場所ほど色がずれて見えます。</strong>ボケが深く平坦な場所では変化が小さく出ます。<br>
